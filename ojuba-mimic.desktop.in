@@ -1,13 +1,11 @@
 [Desktop Entry]
 Encoding=UTF-8
-Name=Ojuba MiMiC
-Name[ar]=محول وسائط أعجوبة
-Comment=Ojuba Multi Media Conveter
-Comment[ar]=محول وسائط أعجوبة
+_Name=Ojuba MiMiC
+_Comment=Ojuba Multi Media Conveter
 Exec=/usr/bin/ojuba-mimic
 Terminal=false
 Type=Application
-Icon=gnome-settings-theme
+Icon=ojuba-mimic
 StartupNotify=true
 Categories=GNOME;GTK;AudioVideo;Video;X-Ximian-Main;X-Red-Hat-Base;
 

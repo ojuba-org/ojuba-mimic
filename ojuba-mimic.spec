@@ -2,7 +2,7 @@ Name: ojuba-mimic
 Obsoletes: mimic
 Summary: Ojuba Multi Media Converter based on ffmpeg
 URL: http://www.ojuba.org
-Version: 0.1.6
+Version: 0.2.0
 Release: 1%{?dist}
 Source0: %{name}-%{version}.tar.bz2
 License: Waqf
@@ -18,21 +18,26 @@ Requires: python, pygtk2, ffmpeg
 Ojuba Multi Media Converter based on ffmpeg
 
 %prep
-%setup -q -n %{name}
+%setup -q
+
 %build
+make %{?_smp_mflags}
 
 %install
 rm -rf $RPM_BUILD_ROOT
+%makeinstall DESTDIR=$RPM_BUILD_ROOT
 
-install -d -p -m 755 $RPM_BUILD_ROOT%{_bindir}
-install -d -p -m 755 $RPM_BUILD_ROOT%{_datadir}/applications
-install -D -p -m 755 %{name}.py $RPM_BUILD_ROOT%{_bindir}/%{name}
-desktop-file-install \
-  --dir $RPM_BUILD_ROOT%{_datadir}/applications \
-  %{name}.desktop
-#mkdir -p $RPM_BUILD_ROOT%{_datadir}/icons/hicolor/32x32/apps
-#install -p -m 644 %{SOURCE1} \
-#  $RPM_BUILD_ROOT%{_datadir}/icons/hicolor/32x32/apps
+%post
+touch --no-create %{_datadir}/icons/hicolor || :
+if [ -x %{_bindir}/gtk-update-icon-cache ] ; then
+%{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
+fi
+
+%postun
+touch --no-create %{_datadir}/icons/hicolor || :
+if [ -x %{_bindir}/gtk-update-icon-cache ] ; then
+%{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
+fi
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -40,7 +45,13 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %doc LICENSE-en LICENSE-ar.txt
 %{_bindir}/%{name}
-%{_datadir}/applications/*
+%{python_sitelib}/OjubaMimic*
+%{python_sitelib}/*.egg-info
+%{_datadir}/icons/hicolor/*/apps/*.png
+%{_datadir}/icons/hicolor/*/apps/*.svg
+%{_datadir}/applications/*.desktop
+%{_datadir}/locale/*/*/*.mo
+
 %changelog
 * Sun Jun 6 2010  Muayyad Saleh AlSadi <alsadi@ojuba.org> - 0.1.6-1
 - update to recent ffmpeg (one with libopencore_amrnb) 
