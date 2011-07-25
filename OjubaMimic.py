@@ -19,7 +19,7 @@ import time
 import gettext
 from urllib import unquote
 from os.path import dirname,basename
-from subprocess import Popen
+from subprocess import Popen, PIPE
 import time
 #".ext (human readable type)", is_video, cmd, q_a,q_v, br_a,br_v, allow_audio_resample, default_ar
 # audio quality float/int, default, from , to, 
@@ -28,16 +28,22 @@ import time
 # video bitrate default , from, to,
 # [disabled flag that can be turned on],
 # validity python eval check, fauler msg
+
+exedir=os.path.dirname(sys.argv[0])
+ld=os.path.join(exedir,'..','share','locale')
+if not os.path.isdir(ld): ld=os.path.join(exedir, 'locale')
+gettext.install('ojuba-mimic', ld, unicode=0)
+
 formats=[
-(".ogg (Ogg/Theora video)", True, "-f ogg -acodec libvorbis -ac 2 %(audio_quality)s -vcodec libtheora %(video_quality)s", 1, 1, 0, 0, 1, 44100, 
+(".ogg _(Ogg/Theora video)", True, "-f ogg -acodec libvorbis -ac 2 %(audio_quality)s -vcodec libtheora %(video_quality)s", 1, 1, 0, 0, 1, 44100, 
  float, 3, 0, 10, float, 10, 1, 100, 
  0, 0, 0, 0, 0, 0, [], 'True',''),
 (".3gp (3GP)", True, "-f 3gp -acodec libopencore_amrnb -ar 8000 -ac 1 -vcodec h263", 0, 0, 1, 1, 0, 8000, 
  float, 3, 0, 10, float, 10, 1, 100, 
- 4750, 4750, 12200, 4750, 4750, 10000000, [], 'size in ("-s 128x96", "-s 176x144", "-s 352x288", "-s 704x576", "-s 1408x1152") and audio_bitrate in (4750, 5150, 5900, 6700, 7400, 7950, 10200, 12200)','choose a vlid size and bitrate (try cif and 4750)'),
-(".flv (Flash Video)", True, '-acodec libmp3lame -r 25 -vcodec flv', 0, 1, 1, 0, 1, 22050, 
+ 4750, 4750, 12200, 4750, 4750, 10000000, [], 'size in ("-s 128x96", "-s 176x144", "-s 352x288", "-s 704x576", "-s 1408x1152") and audio_bitrate in (4750, 5150, 5900, 6700, 7400, 7950, 10200, 12200)',_('choose a valid size and bitrate (try cif and 4750)')),
+(".flv _(Flash Video)", True, '-acodec libmp3lame -r 25 -vcodec flv', 0, 1, 1, 0, 1, 22050, 
  float, 3, 0, 10, int, 10, 1, 100,
- 32000, 8000, 1000000, 100000, 10000, 10000000, [], 'audio_samplerate in (44100, 22050, 11025)','audio samplerate should be 44100, 22050 or 11025'),
+ 32000, 8000, 1000000, 100000, 10000, 10000000, [], 'audio_samplerate in (44100, 22050, 11025)',_('audio samplerate should be 44100, 22050 or 11025')),
 (".avi (msmpeg4)", True, "-f avi -acodec libmp3lame -vcodec msmpeg4v2", 0, 0, 1, 1, 1, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [], 'True',''),
@@ -59,7 +65,6 @@ formats=[
 (".mpg (film)",True, "-f mpeg -target ntsc-film", 0, 0, 0, 0, 0, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, ['-flags qprd','-flags mv0','-flags skiprd','-g 100'], 'True',''),
-
 (".mpg (mpeg1)",True, "-f mpeg -acodec libmp3lame -vcodec mpeg1video -mbd rd -flags +trell -cmp 2 -subcmp 2 -bf 2", 0, 0, 1, 1, 1, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, ['-flags qprd','-flags mv0','-flags skiprd','-g 100'], 'True',''),
@@ -69,15 +74,15 @@ formats=[
 (".mp4 (psp ~30fps)",True,"-f psp -acodec libfaac -vcodec mpeg4 -ar 24000 -r 30000/1001 -bf 2", 0, 0, 1, 1, 0, 24000, 
  int, 0, 0, 0, int, 0, 0, 0,  
 32000, 8000, 1000000, 100000, 10000, 10000000, [],
- 'not size and width*height<=76800 and width%16==0 and height%16==0','Width and Hight must be multibles of 16 or too big resolution'),
+ 'not size and width*height<=76800 and width%16==0 and height%16==0',_('Width and Hight must be multibles of 16 or too big resolution')),
 (".mp4 (psp ~15fps)",True,"-f psp -acodec libfaac -vcodec mpeg4 -ar 24000 -r 15000/1001 -bf 2", 0, 0, 1, 1, 0, 24000, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [],
- 'not size or width*height<=76800 and width%16==0 and height%16==0','Width and Hight must be multibles of 16 or too big resolution'),
+ 'not size or width*height<=76800 and width%16==0 and height%16==0',_('Width and Hight must be multibles of 16 or too big resolution')),
 ('.mp4 (ipod)',True,'-acodec libfaac -vcodec mpeg4 -mbd 2 -flags +4mv+trell -aic 2 -cmp 2 -subcmp 2 -bf 2', 0, 0, 1, 1, 1, 22050, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [],
- 'not size or width<=320 and height<=240','too big resolution, resize it so that width<=320 and height<=240'),
+ 'not size or width<=320 and height<=240',_('too big resolution, resize it so that width<=320 and height<=240')),
 ('.avi (MPEG4 like DviX)',True,'-f avi -mbd rd -flags +4mv+trell+aic -cmp 2 -subcmp 2 -g 300 -acodec libfaac -vcodec mpeg4 -vtag DIV5 -bf 2', 0, 0, 1, 1, 1, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [],'True',''),
@@ -113,7 +118,7 @@ scale_ls=["sqcif 128x96", "qcif 176x144", "cif 352x288", "4cif 704x576",
 "qsxga 2560x2048", "hsxga 5120x4096", "wvga 852x480", "wxga 1366x768",
 "wsxga 1600x1024", "wuxga 1920x1200", "woxga 2560x1600", "wqsxga 3200x2048",
 "wquxga 3840x2400", "whsxga 6400x4096", "whuxga 7680x4800", "cga 320x200",
-"ega 640x350", "hd480 852x480", "hd720 1280x720", "hd1080 1920x1080","custom"]
+"ega 640x350", "hd480 852x480", "hd720 1280x720", "hd1080 1920x1080",_("custom")]
 
 banner_list=[
 'وَمِنَ النَّاسِ مَنْ يَشْتَرِي لَهْوَ الْحَدِيثِ لِيُضِلَّ عَنْ سَبِيلِ اللَّهِ\nبِغَيْرِ عِلْمٍ وَيَتَّخِذَهَا هُزُوًا أُولَئِكَ لَهُمْ عَذَابٌ مُهِينٌ'
@@ -149,18 +154,20 @@ def create_combo(c, ls, w=1):
   c.set_active(0)
   return c
 
-
 class MainWindow(gtk.Window):
   def __init__(self):
     gtk.Window.__init__(self)
+    gtk.window_set_default_icon_name('ojuba-mimic')
     self.working_ls=[]
     self.done_ls=[]
-    self.set_title('MiMiC :: Multi Media Converter')
+    self.fileman=FileManager()
+    self.set_title(_('MiMiC :: Multi Media Converter'))
     self.drag_dest_set(gtk.DEST_DEFAULT_ALL,gtk.target_list_add_uri_targets(),(1<<5)-1)
-    self.set_size_request(780, 550)
+    self.set_size_request(-1, 550)
     self.connect('destroy', self.quit)
-    self.connect("delete_event", self.quit)
+    self.connect('delete_event', self.quit)
     self.connect('drag-data-received',self.drop_data_cb)
+    self.set_resizable(False)
     self.set_position(gtk.WIN_POS_CENTER_ALWAYS)
     vb=gtk.VBox(False,0) 
     self.add(vb)
@@ -175,7 +182,7 @@ class MainWindow(gtk.Window):
     b_add=gtk.Button(stock=gtk.STOCK_ADD)
     b_rm=gtk.Button(stock=gtk.STOCK_REMOVE)
     b_clear=gtk.Button(stock=gtk.STOCK_CLEAR)
-    e_to=gtk.Label('to: ')
+    e_to=gtk.Label(_('to: '))
     self.c_to=create_combo(gtk.combo_box_new_text(), map(lambda i:i[0],formats),2)
 
     self.b_convert=gtk.Button(stock=gtk.STOCK_CONVERT)
@@ -186,7 +193,10 @@ class MainWindow(gtk.Window):
     self.files_list.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
 
     self.tools_hb=d_hb=gtk.HBox(False,0)
-    for i in (b_add, gtk.VSeparator(), b_rm, b_clear, gtk.VSeparator(), e_to, self.c_to):
+    self.ctoools_hb=gtk.HBox(False,0)
+    for i in (b_rm, b_clear, gtk.VSeparator(), e_to, self.c_to):
+      self.ctoools_hb.pack_start(i,False, False, 2)
+    for i in (b_add, gtk.VSeparator(),self.ctoools_hb):
       d_hb.pack_start(i,False, False, 2)
     hb=gtk.HBox(False,0); vb.pack_start(hb,False, False, 0)
     for i in (d_hb,self.b_convert,self.b_stop,b_about):
@@ -199,16 +209,16 @@ class MainWindow(gtk.Window):
     vb.pack_start(self.options,False, False, 0)
     
     s_hb=gtk.HBox(False,0); vb.pack_start(s_hb,False, False, 0)
-    self.b_status = b = gtk.ToggleButton('Options')
+    self.b_status = b = gtk.ToggleButton(_('Options'))
     b.connect('toggled', lambda *a: self.options.set_visible(b.get_active()))
     self.status_bar = s = gtk.Statusbar()
     s_hb.pack_start(b, False,False,2)
     s_hb.pack_start(s, True,True,2)
-    context_id = self.status_bar.get_context_id("STATUS_S")
     self.context_id = context_id = self.status_bar.get_context_id("STATUS_D")
-    self.status_bar.push(context_id,'Add files, Then click Convert!')
+    self.status_bar.push(context_id,_('Add files, Then click Convert!'))
     
     b_add.connect('clicked', self.add_files_cb)
+    
     b_clear.connect('clicked', self.clear_cb)
     b_rm.connect('clicked', self.rm_cb)
     self.c_to.connect('changed', self.c_to_cb)
@@ -221,12 +231,12 @@ class MainWindow(gtk.Window):
     cells=[]
     cols=[]
     cells.append(gtk.CellRendererText())
-    cols.append(gtk.TreeViewColumn('Files', cells[-1], text=1))
+    cols.append(gtk.TreeViewColumn(_('Files'), cells[-1], text=1))
     cols[-1].set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
     cols[-1].set_resizable(True)
     cols[-1].set_expand(True)
     cells.append(gtk.CellRendererProgress());
-    cols.append(gtk.TreeViewColumn('%', cells[-1], value=2,pulse=3,text=4))
+    cols.append(gtk.TreeViewColumn('\t%s\t'%_('Status'), cells[-1], value=2,pulse=3,text=4))
     cols[-1].set_expand(False)
     self.files_list.set_headers_visible(True)
     self.b_stop.set_sensitive(False)
@@ -235,6 +245,10 @@ class MainWindow(gtk.Window):
 
     self.c_to.set_active(len(formats)-1)
     self.c_to.set_active(0)
+    
+    self.popupMenu = gtk.Menu()
+    self.build_popup_Menu()
+    self.files_list.connect("button-press-event", self.do_popup)
     
     # sample list for testing
     #ls=[("/usr/share/file1.avi",10.0),("file2",20)]
@@ -245,19 +259,57 @@ class MainWindow(gtk.Window):
     self.show_all()
     self.options.set_visible(False)
     
+  def build_popup_Menu(self):
+		i = gtk.MenuItem(_("Open output folder"))
+		i.connect("activate", self.open_odir_cb)
+		self.popupMenu.add(i)
+		self.popupMenu.add(gtk.SeparatorMenuItem())
+		i = gtk.ImageMenuItem(gtk.STOCK_REMOVE)
+		i.connect("activate", self.rm_cb)
+		self.popupMenu.add(i)
+		i = gtk.ImageMenuItem(gtk.STOCK_CLEAR)
+		i.connect("activate", self.clear_cb)
+		self.popupMenu.add(i)
+		
+  def do_popup(self, widget, event):
+    iters = self.get_Iters()
+    if event.button == 3 and len(iters) > 0:
+      self.popupMenu.show_all()
+      self.popupMenu.popup(None, self, None, 3, gtk.get_current_event_time())
+      return True
+      
+  def get_Iters(self):
+    sel_model, sel_rows = self.files_list.get_selection().get_selected_rows()
+    return map(lambda a: self.files.get_iter(a), sel_rows)
+    
+  def open_odir_cb(self, *args):
+    self.fileman._opend={}
+    odir=self.options.dst_b.get_filename()
+    if self.options.dst_o2.get_active():
+      self.fileman.run_file_man(odir)
+    else:
+      iters = self.get_Iters()
+      for i in iters:
+        odir = os.path.dirname(self.files[self.files.get_path(i)[0]][0])
+        self.fileman.run_file_man(odir)
+        
   def clear_cb(self, *args):
     ln=len(self.files)
     self.files.clear()
     self.done_ls=[]
-    self.status_bar.push(self.context_id, '%i Files removed'%ln)
+    self.rmstatus(ln)
     
   def rm_cb(self, *args):
-    sel_model, sel_rows = self.files_list.get_selection().get_selected_rows()
-    iters = map(lambda a: self.files.get_iter(a), sel_rows)
+    iters = self.get_Iters()
     #print iters
     for i in iters:
-      if i: self.files.remove (i)
-    self.status_bar.push(self.context_id, '%i Files removed'%len(iters))
+      fn = self.files[self.files.get_path(i)[0]][0]
+      self.done_ls=filter(lambda a: fn not in a,self.done_ls)
+      if i: self.files.remove(i)
+    self.rmstatus(len(iters))
+    
+  def rmstatus(self, fc):
+    self.status_bar.push(self.context_id, '%i %s' %(fc, _('File/Files removed')))
     
   def progress_cb(self, *args):
     #print "*", len(working_ls)
@@ -265,12 +317,17 @@ class MainWindow(gtk.Window):
       self.b_stop.set_sensitive(False)
       self.b_convert.set_sensitive(False)
       self.tools_hb.set_sensitive(True)
+      self.ctoools_hb.set_sensitive(False)
       return True
     self.b_stop.set_sensitive(len(self.working_ls)>0)
     self.b_convert.set_sensitive(len(self.working_ls)<=0)
     self.tools_hb.set_sensitive(len(self.working_ls)<=0)
+    self.ctoools_hb.set_sensitive(len(self.working_ls)<=0)
+    self.ctoools_hb.get_children()[0].set_sensitive(len(self.get_Iters())>0)
+    self.popupMenu.get_children()[2].set_sensitive(len(self.working_ls)<=0)
+    self.popupMenu.get_children()[3].set_sensitive(len(self.working_ls)<=0)
     if len(self.working_ls)<=0: return True
-    self.status_bar.push(self.context_id,'Converting: %i files of %i Compleated!' %(len(self.done_ls),len(self.files)))
+    self.progressstatus(len(self.done_ls),len(self.files))
     if not self.working_ls[0][0]:
       self.start_subprocess()
       return True
@@ -282,19 +339,23 @@ class MainWindow(gtk.Window):
       i=self.files[(self.working_ls[0][2],)]
       i[2]=100
       i[3]=-1
-      i[4]='Done'
+      i[4]=_('Done')
     else:
       i=self.files[(self.working_ls[0][2],)]
       i[2]=100
       i[3]=-1
-      i[4]='Error %d' % r
+      i[4]='%s %d' % (_('Error'), r)
     done_item = self.working_ls[0][-1]
     #del done_item[0]
     #del done_item[3]
     #print done_item
     self.done_ls.append(done_item)
     self.working_ls.pop(0)
+    self.progressstatus(len(self.done_ls),len(self.files))
     return True
+    
+  def progressstatus(self, cm, tot):
+    self.status_bar.push(self.context_id,'%s %i %s %i %s!' %(_('Converting:'),cm,_('file/files of'),tot,_('Compleated')))
     
   def progress(self, *args):
     p,icmd,i,fn,ofn,sn=self.working_ls[0]
@@ -303,7 +364,7 @@ class MainWindow(gtk.Window):
     except OSError, e: self.pulse_cb(i); return True
     if working_size==0: self.pulse_cb(i); return True
     try: s=os.path.getsize(fn)
-    except: self.pulse_cb(i); return True
+    except OSError: self.pulse_cb(i); return True
     if working_size==0 or s<working_size: self.pulse_cb(i); return True
     pct=(float(working_size)/s)*100.0
     self.files[(i,)][2]=pct
@@ -327,27 +388,32 @@ class MainWindow(gtk.Window):
       elif self.options.x_o1.get_active():
         return self.skiped()
     self.working_ls[0][0]=Popen(self.working_ls[0][1],0,'/bin/sh',shell=True)
-    i=self.files[(self.working_ls[0][2],)]; i[2]=0; i[3]=-1; i[4]='Converting ...'
+    i=self.files[(self.working_ls[0][2],)]; i[2]=0; i[3]=-1; i[4]=_('Converting ...')
     #self.working_ls.append()=[None,icmd,working_on,fn,ofn]
-
 
   def drop_data_cb(self, widget, dc, x, y, selection_data, info, t):
     for i in selection_data.get_uris():
       if i.startswith('file://'):
         f=unquote(i[7:])
-        self.files.append([f,basename(f),0,-1,"Not started"])
+        if os.path.isfile(f):
+          self.files.append([f,basename(f),0,-1,_('Not started')])
+        else:
+          print "Can not add folders [%s]" % f
       else:
         print "Protocol not supported in [%s]" % i
     dc.drop_finish (True, t);
-    self.status_bar.push(self.context_id,'Click Convert, to start converting %i files' %len(self.files))
+    self.addstatus(len(self.files))
   
   def add_files_cb(self, *args):
     dlg = add_dlg()
     if (dlg.run()==gtk.RESPONSE_ACCEPT):
-      for i in dlg.get_filenames(): self.files.append([i,basename(i),0,-1,"Not started"])
-    self.status_bar.push(self.context_id,'Click Convert, to start converting %i files' %len(self.files))
+      for i in dlg.get_filenames(): self.files.append([i,basename(i),0,-1,_('Not started')])
+      self.addstatus(len(self.files))
     dlg.unselect_all()
 
+  def addstatus(self, fc):
+    self.status_bar.push(self.context_id,'%s %i %s' %(_('Click Convert, to start converting'),fc,_('file/files')))
+    
   def c_to_cb(self, c,*args):
     frm=formats[c.get_active()]
     for i,j,k in ((frm[3],self.options.q_a_c,self.options.q_a),(frm[4],self.options.q_v_c,self.options.q_v),(frm[5],self.options.br_a_c,self.options.br_a),(frm[6],self.options.br_v_c,self.options.br_v)):
@@ -365,7 +431,9 @@ class MainWindow(gtk.Window):
     self.b_convert.set_sensitive(False)
     self.tools_hb.set_sensitive(False)
     self.b_stop.set_sensitive(True)
-    self.status_bar.push(self.context_id,'Starting operations...')
+    self.popupMenu.get_children()[2].set_sensitive(False)
+    self.popupMenu.get_children()[3].set_sensitive(False)
+    self.status_bar.push(self.context_id,_('Starting operations...'))
     frm=formats[self.c_to.get_active()]
     cmd=self.options.build_cmd(formats[self.c_to.get_active()], self)
     if not cmd: return
@@ -381,6 +449,7 @@ class MainWindow(gtk.Window):
       #if fn==ofn or os.path.exists(ofn): i[4]='Exists; Skiped'; continue
       #i[2]=0; i[3]=-1; i[4]='Converting ...'
       icmd="ffmpeg -y -i 'file://%s' %s 'file://%s'" % (fn,cmd,ofn)
+      print "*** ", icmd
       #print icmd
       serial=[cmd,fn]
       #print serial, self.done_ls
@@ -398,13 +467,15 @@ class MainWindow(gtk.Window):
   def stop_cb(self, *args):
     for j in self.working_ls:
       if j[0]:
-        try: os.kill(j[0].pid,signal.SIGTERM)
-        except: pass
+        try: os.kill(j[0].pid,signal.SIGTERM); os.unlink(j[4])
+        except OSError: pass
         i=self.files[(self.working_ls[0][2],)]
-        i[4]='Canceled'
+        i[4]=_('Canceled')
     self.working_ls=[]
     self.b_convert.set_sensitive(True)
     self.tools_hb.set_sensitive(True)
+    self.popupMenu.get_children()[2].set_sensitive(True)
+    self.popupMenu.get_children()[3].set_sensitive(True)
     self.b_stop.set_sensitive(False)
   
   def suffex_gen(self):
@@ -426,7 +497,7 @@ class MainWindow(gtk.Window):
   def rename_cb(self):
     ofn=self.working_ls[0][4]=self.suggest_name(self.working_ls[0][4])
     if not ofn:
-      i=self.files[(self.working_ls[0][2],)]; i[4]='Exists; Skiped';
+      i=self.files[(self.working_ls[0][2],)]; i[4]=_('Exists; Skiped');
       self.working_ls.pop(0); return False
     fn=self.working_ls[0][3]
     cmd=self.options.build_cmd(formats[self.c_to.get_active()], self)
@@ -435,7 +506,7 @@ class MainWindow(gtk.Window):
 
   def skiped(self):
     i=self.files[(working_ls[0][2],)]
-    i[4]='Exists; Skiped'
+    i[4]=_('Exists; Skiped')
     self.working_ls.pop(0)
     return 0
 
@@ -445,99 +516,117 @@ class MainWindow(gtk.Window):
     
 class options(gtk.Frame):
   def __init__(self, win):
-    gtk.Frame.__init__(self,'Convert options...')
+    gtk.Frame.__init__(self,_('Options...'))
     m_vb=gtk.VBox(False, 0)
     self.add(m_vb)
-    dst_l=gtk.Label("Save destination: ")
-    self.dst_o1=gtk.RadioButton(None,"same as source")
-    self.dst_o2=gtk.RadioButton(self.dst_o1,"fixed")
-    self.dst_b=gtk.FileChooserButton("Select destination folder")
+    save_fram=gtk.Frame(_('Save Options...'))
+    save_fram.set_shadow_type(gtk.SHADOW_OUT)
+    s_vb=gtk.VBox(False, 0)
+    save_fram.add(s_vb)
+    dst_l=gtk.Label(_('Save destination: '))
+    self.dst_o1=gtk.RadioButton(None,_("same as source"))
+    self.dst_o2=gtk.RadioButton(self.dst_o1,_("fixed"))
+    self.dst_b=gtk.FileChooserButton(_("Select destination folder"))
     self.dst_b.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
 
-    x_l=gtk.Label("If exists: ")
-    self.x_o1=gtk.RadioButton(None,"Skip")
-    self.x_o2=gtk.RadioButton(self.x_o1,"Overwrite")
-    self.x_o3=gtk.RadioButton(self.x_o1,"Rename")
+    x_l=gtk.Label(_("If exists: "))
+    self.x_o1=gtk.RadioButton(None,_("Skip"))
+    self.x_o2=gtk.RadioButton(self.x_o1,_("Overwrite"))
+    self.x_o3=gtk.RadioButton(self.x_o1,_("Rename"))
+    
+    hb=gtk.HBox(False,0)
+    s_vb.pack_start(hb,False, False, 2)
+    for i in (gtk.Label(' '),dst_l,self.dst_o1,self.dst_o2,self.dst_b): hb.pack_start(i,False, False, 2)
+    hb=gtk.HBox(False,0)
+    s_vb.pack_start(hb,False, False, 2)
+    for i in (gtk.Label(' '),x_l,self.x_o1,self.x_o2,self.x_o3): hb.pack_start(i,False, False, 2)
+    m_vb.pack_start(save_fram,False, False, 2)
     # temporal
     #x_o2.set_sensitive(False)
     #x_o3.set_sensitive(False)
     
-    self.crp_c=gtk.CheckButton("Crop")
+    self.crp_c=gtk.CheckButton(_("Crop"))
     crp_hb=gtk.HBox(False,0);
     
-    crp_ly1=gtk.Label("Top"); self.crp_dy1=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 2, 10, 0))
-    crp_ly2=gtk.Label("Bottom"); self.crp_dy2=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 2, 10, 0))
-    crp_lx1=gtk.Label("Left"); self.crp_dx1=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 2, 10, 0))
-    crp_lx2=gtk.Label("Right"); self.crp_dx2=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 2, 10, 0))
+    crp_ly1=gtk.Label(_("Top")); self.crp_dy1=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 2, 10, 0))
+    crp_ly2=gtk.Label(_("Bottom")); self.crp_dy2=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 2, 10, 0))
+    crp_lx1=gtk.Label(_("Left")); self.crp_dx1=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 2, 10, 0))
+    crp_lx2=gtk.Label(_("Right")); self.crp_dx2=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 2, 10, 0))
 
-    self.pad_c=gtk.CheckButton("Pad")
+    self.pad_c=gtk.CheckButton(_("Pad"))
     pad_hb=gtk.HBox(False,0);
-    pad_ly1=gtk.Label("Top"); self.pad_dy1=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 1, 10, 0))
-    pad_ly2=gtk.Label("Bottom"); self.pad_dy2=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 1, 10, 0))
-    pad_lx1=gtk.Label("Left"); self.pad_dx1=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 1, 10, 0))
-    pad_lx2=gtk.Label("Right"); self.pad_dx2=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 1, 10, 0))
+    pad_ly1=gtk.Label(_("Top")); self.pad_dy1=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 1, 10, 0))
+    pad_ly2=gtk.Label(_("Bottom")); self.pad_dy2=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 1, 10, 0))
+    pad_lx1=gtk.Label(_("Left")); self.pad_dx1=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 1, 10, 0))
+    pad_lx2=gtk.Label(_("Right")); self.pad_dx2=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 1, 10, 0))
 
-    self.br_a_c=gtk.CheckButton("Audio Bitrates")
+    self.br_a_c=gtk.CheckButton(_("Audio Bitrates"))
     self.br_a=gtk.SpinButton(gtk.Adjustment(320000, 8000, 10000000, 50, 100, 0))
-    br_a_l=gtk.Label("bit/s");
-    self.br_v_c=gtk.CheckButton("Video Bitrates")
+    br_a_l=gtk.Label(_("bit/s"));
+    self.br_v_c=gtk.CheckButton(_("Video Bitrates"))
     self.br_v=gtk.SpinButton(gtk.Adjustment(100000, 8000, 10000000, 50, 100, 0))
-    br_v_l=gtk.Label("bit/s");
+    br_v_l=gtk.Label(_("bit/s"));
 
-    self.q_a_c=gtk.CheckButton("Audio Quality")
+    self.q_a_c=gtk.CheckButton(_("Audio Quality"))
     self.q_a=gtk.HScale(gtk.Adjustment(3, 0, 10,0))
     self.q_a.set_property("value-pos",gtk.POS_LEFT)
-    self.q_v_c=gtk.CheckButton("Video Quality")
+    self.q_v_c=gtk.CheckButton(_("Video Quality"))
     self.q_v=gtk.HScale(gtk.Adjustment(10, 0, 100,0))
     self.q_v.set_property("value-pos",gtk.POS_LEFT)
 
-    self.ar_c=gtk.CheckButton("Audio Samplerate")
+    self.ar_c=gtk.CheckButton(_("Audio Samplerate"))
     self.ar_r=create_combo(gtk.combo_box_new_text(), map(lambda i: str(i),list(range(11025,48101,11025)+list(range(8000,48001,8000))) ),2)
     
     self.scale_dict={}
-    for i in filter(lambda a: a!='custom',scale_ls): a=i.split(' '); self.scale_dict[a[1]]=i
-    self.scale_c=gtk.CheckButton("Resize")
+    for i in filter(lambda a: a!=_("custom"),scale_ls): a=i.split(' '); self.scale_dict[a[1]]=i
+    self.scale_c=gtk.CheckButton(_("Resize"))
     scale_hb=gtk.HBox(False,0);
     self.scale_l=create_combo(gtk.combo_box_new_text(), scale_ls,2)
     self.scale_w=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 1, 10, 0))
     self.scale_x=gtk.Label("x");
     self.scale_h=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 1, 10, 0))
 
+    conv_fram=gtk.Frame(_('Convert Options...'))
+    conv_fram.set_shadow_type(gtk.SHADOW_OUT)
+    c_vb=gtk.VBox(False, 0)
+    c_hb=gtk.HBox(False, 0)
+    conv_fram.add(c_vb)
+    c_hb.pack_start(conv_fram,False, False, 2)
+    m_vb.pack_start(c_hb,False, False, 2)
+
+    #LOGO=gtk.Image()
+    #LOGO.set_from_file('./ojuba-mimic.svg')
+    #c_hb.pack_start(LOGO,True, False, 2)
+    
     hb=gtk.HBox(False,0)
-    m_vb.pack_start(hb,False, False, 2)
-    for i in (dst_l,self.dst_o1,self.dst_o2,self.dst_b): hb.pack_start(i,False, False, 2)
-    hb=gtk.HBox(False,0)
-    m_vb.pack_start(hb,False, False, 2)
-    for i in (x_l,self.x_o1,self.x_o2,self.x_o3): hb.pack_start(i,False, False, 2)
-    hb=gtk.HBox(False,0)
-    m_vb.pack_start(hb,False, False, 2)
+    c_vb.pack_start(hb,False, False, 2)
     hb.pack_start(self.crp_c,False, False, 2)
     hb.pack_start(crp_hb,True, True, 2)
     for i in (crp_ly1,self.crp_dy1,crp_ly2,self.crp_dy2,crp_lx1,self.crp_dx1,crp_lx2,self.crp_dx2): crp_hb.pack_start(i,False, False, 2)
 
     hb=gtk.HBox(False,0)
-    m_vb.pack_start(hb,False, False, 2)
+    c_vb.pack_start(hb,False, False, 2)
     hb.pack_start(self.scale_c,False, False, 2)
     hb.pack_start(scale_hb,True, True, 2)
     for i in (self.scale_l,self.scale_w,self.scale_x,self.scale_h): scale_hb.pack_start(i,False, False, 2)
 
     hb=gtk.HBox(False,0)
-    m_vb.pack_start(hb,False, False, 2)
+    c_vb.pack_start(hb,False, False, 2)
     hb.pack_start(self.pad_c,False, False, 2)
     hb.pack_start(pad_hb,True, True, 2)
     for i in (pad_ly1,self.pad_dy1,pad_ly2,self.pad_dy2,pad_lx1,self.pad_dx1,pad_lx2,self.pad_dx2): pad_hb.pack_start(i,False, False, 2)
 
     hb_br=gtk.HBox(False,0)
-    m_vb.pack_start(hb_br,False, False, 2)
+    c_vb.pack_start(hb_br,False, False, 2)
     for i in (self.br_a_c,self.br_a,br_a_l, gtk.VSeparator(),self.br_v_c,self.br_v,br_v_l): hb_br.pack_start(i,False, False, 2)
 
     hb_q=gtk.HBox(False,0)
-    m_vb.pack_start(hb_q,False, False, 2)
+    c_vb.pack_start(hb_q,False, False, 2)
     for i in (self.q_a_c,self.q_a, gtk.VSeparator(),self.q_v_c,self.q_v): hb_q.pack_start(i,type(i)==gtk.HScale, type(i)==gtk.HScale, 2)
 
 
     self.hb_ar=gtk.HBox(False,0)
-    m_vb.pack_start(self.hb_ar,False, False, 2)
+    c_vb.pack_start(self.hb_ar,False, False, 2)
     for i in (self.ar_c,self.ar_r): self.hb_ar.pack_start(i,False, False, 2)
     
     self.dst_o2.connect('toggled', lambda *args: self.dst_b.set_sensitive(self.dst_o2.get_active()))
@@ -557,7 +646,7 @@ class options(gtk.Frame):
 
   def scale_cb(self, c,w,h):
     s=c.get_model()[c.get_active()][0]
-    if s=='custom': return
+    if s==_("custom"): return
     n,r=s.split(' '); W,H=r.split('x')
     w.set_value(float(W)); h.set_value(float(H));
 
@@ -566,7 +655,7 @@ class options(gtk.Frame):
     W=w.get_value()
     H=h.get_value()
     S='%dx%d' % (W,H)
-    if S not in scale_dict: l.set_active(scale_ls.index("custom"))
+    if S not in scale_dict: l.set_active(scale_ls.index(_("custom")))
     elif scale_dict[S]!=l.get_model()[l.get_active()][0]:
       l.set_active(scale_ls.index(scale_dict[S]))
 
@@ -640,25 +729,25 @@ class options(gtk.Frame):
    
 class add_dlg(gtk.FileChooserDialog):
   def __init__(self):
-    gtk.FileChooserDialog.__init__(self,"Select files to convert",buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+    gtk.FileChooserDialog.__init__(self,_("Select files to convert"),buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
     ff=gtk.FileFilter()
-    ff.set_name('All media files')
+    ff.set_name(_('All media files'))
     ff.add_mime_type('video/*')
     ff.add_mime_type('audio/*')
     ff.add_pattern('*.[Rr][AaMm]*')
     self.add_filter(ff)
     ff=gtk.FileFilter()
-    ff.set_name('All video files')
+    ff.set_name(_('All video files'))
     ff.add_mime_type('video/*')
     ff.add_pattern('*.[Rr][AaMm]*')
     self.add_filter(ff)
     ff=gtk.FileFilter()
-    ff.set_name('All audio files')
+    ff.set_name(_('All audio files'))
     ff.add_mime_type('audio/*')
     ff.add_pattern('*.[Rr][AaMm]*')
     self.add_filter(ff)  
     ff=gtk.FileFilter()
-    ff.set_name('All files')
+    ff.set_name(_('All files'))
     ff.add_pattern('*')
     self.add_filter(ff)
     self.set_select_multiple(True)
@@ -671,14 +760,15 @@ class about_dlg(gtk.AboutDialog):
 	  self.set_default_response(gtk.RESPONSE_CLOSE)
 	  self.connect('delete-event', lambda *w: self.hide())
 	  self.connect('response', lambda *w: self.hide())
-	  try: self.set_program_name("MiMiC")
-	  except: pass
-	  self.set_name("MiMiC")
+	  try: self.set_program_name(_("MiMiC"))
+	  except AttributeError: pass
+	  self.set_logo_icon_name('ojuba-mimic')
+	  self.set_name(_("MiMiC"))
 	  #about_dlg.set_version(version)
-	  self.set_copyright("Copyright © 2008-2011 Ojuba.org <core@ojuba.org>")
-	  self.set_comments("Multi Media Converter")
-	  self.set_license("""
-      Released under terms on Waqf Public License.
+	  self.set_copyright(_("Copyright © 2008-2011 Ojuba.org <core@ojuba.org>"))
+	  self.set_comments(_("Multi Media Converter"))
+	  self.set_license(_("""
+      Released under terms of Waqf Public License.
       This program is free software; you can redistribute it and/or modify
       it under the terms of the latest version Waqf Public License as
       published by Ojuba.org.
@@ -690,10 +780,59 @@ class about_dlg(gtk.AboutDialog):
       The Latest version of the license can be found on
       "http://waqf.ojuba.org/license"
 
-  """)
+  """))
 	  self.set_website("http://www.ojuba.org/")
 	  self.set_website_label("http://www.ojuba.org")
 	  self.set_authors(["Muayyad Saleh Alsadi <alsadi@ojuba.org>", "Ehab El-Gedawy <ehabsas@gmail.com>"])
+
+class FileManager:
+  def __init__(self):
+    self._ps=[]
+    self._opend={}
+    
+  def run_in_bg(self, cmd):
+    setsid = getattr(os, 'setsid', None)
+    if not setsid: setsid = getattr(os, 'setpgrp', None)
+    self._ps=filter(lambda x: x.poll()!=None,self._ps) # remove terminated processes from _ps list
+    #opend = dict(filter(lambda (k,v): k in self._ps,self._opend.items()))
+    #print self._ps
+    #print self._opend
+    if cmd in self._opend.values(): return False
+    cid=Popen(cmd,0,'/bin/sh',shell=True, preexec_fn=setsid)
+    self._ps.append(cid)
+    self._opend[cid]=cmd
+
+  def get_pids(self, l):
+    pids=[]
+    for i in l:
+      p=Popen(['/sbin/pidof',i], 0, stdout=PIPE)
+      l=p.communicate()[0].strip().split()
+      r=p.returncode
+      if r==0: pids.extend(l)
+    pids.sort()
+    return pids
+
+  def get_desktop(self):
+    """return 1 for kde, 0 for gnome, -1 none of them"""
+    l=self.get_pids(('kwin','ksmserver',))
+    if l: kde=l[0]
+    else: kde=None
+    l=self.get_pids(('gnome-session',))
+    if l: gnome=l[0]
+    else: gnome=None
+    if kde:
+      if not gnome or kde<gnome: return 1
+      else: return 0
+    if gnome: return 0
+    else: return -1
+
+  def run_file_man(self,mp):
+    if self.get_desktop()==0: self.run_in_bg("nautilus '%s'" % mp)
+    elif self.get_desktop()==1: self.run_in_bg("konqueror '%s'" % mp)
+    elif os.path.exists('/usr/bin/thunar'): self.run_in_bg("thunar '%s'" % mp)
+    elif os.path.exists('/usr/bin/pcmanfm'): self.run_in_bg("pcmanfm '%s'" % mp)
+    elif os.path.exists('/usr/bin/nautilus'): self.run_in_bg("nautilus --no-desktop '%s'" % mp)
+    elif os.path.exists('/usr/bin/konqueror'): self.run_in_bg("konqueror '%s'" % mp)
 
 def main():
   win=MainWindow()
