@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-07-25 15:20+0300\n"
+"POT-Creation-Date: 2011-07-28 23:29+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -41,224 +41,232 @@ msgstr ""
 msgid "too big resolution, resize it so that width<=320 and height<=240"
 msgstr ""
 
-#: ../OjubaMimic.py:121 ../OjubaMimic.py:580 ../OjubaMimic.py:648
-#: ../OjubaMimic.py:657
+#: ../OjubaMimic.py:121 ../OjubaMimic.py:606 ../OjubaMimic.py:734
+#: ../OjubaMimic.py:743
 msgid "custom"
 msgstr ""
 
-#: ../OjubaMimic.py:164
+#: ../OjubaMimic.py:172
 msgid "MiMiC :: Multi Media Converter"
 msgstr ""
 
-#: ../OjubaMimic.py:185
+#: ../OjubaMimic.py:193
 msgid "to: "
 msgstr ""
 
-#: ../OjubaMimic.py:212
+#: ../OjubaMimic.py:222
 msgid "Options"
 msgstr ""
 
-#: ../OjubaMimic.py:218
+#: ../OjubaMimic.py:228
 msgid "Add files, Then click Convert!"
 msgstr ""
 
-#: ../OjubaMimic.py:234
+#: ../OjubaMimic.py:244
 msgid "Files"
 msgstr ""
 
-#: ../OjubaMimic.py:239
+#: ../OjubaMimic.py:249
 msgid "Status"
 msgstr ""
 
-#: ../OjubaMimic.py:263
+#: ../OjubaMimic.py:282
 msgid "Open output folder"
 msgstr ""
 
-#: ../OjubaMimic.py:312
+#: ../OjubaMimic.py:331
 msgid "File/Files removed"
 msgstr ""
 
-#: ../OjubaMimic.py:342
+#: ../OjubaMimic.py:357
 msgid "Done"
 msgstr ""
 
-#: ../OjubaMimic.py:347
+#: ../OjubaMimic.py:362
 msgid "Error"
 msgstr ""
 
-#: ../OjubaMimic.py:358
+#: ../OjubaMimic.py:367
+msgid "Finished:"
+msgstr ""
+
+#: ../OjubaMimic.py:372
 msgid "Converting:"
 msgstr ""
 
-#: ../OjubaMimic.py:358
+#: ../OjubaMimic.py:375
 msgid "file/files of"
 msgstr ""
 
-#: ../OjubaMimic.py:358
+#: ../OjubaMimic.py:375
 msgid "Compleated"
 msgstr ""
 
-#: ../OjubaMimic.py:391
+#: ../OjubaMimic.py:409
 msgid "Converting ..."
 msgstr ""
 
-#: ../OjubaMimic.py:399 ../OjubaMimic.py:410
+#: ../OjubaMimic.py:418 ../OjubaMimic.py:433
 msgid "Not started"
 msgstr ""
 
-#: ../OjubaMimic.py:415
+#: ../OjubaMimic.py:441
 msgid "Click Convert, to start converting"
 msgstr ""
 
-#: ../OjubaMimic.py:415
+#: ../OjubaMimic.py:441
 msgid "file/files"
 msgstr ""
 
-#: ../OjubaMimic.py:436
-msgid "Starting operations..."
+#: ../OjubaMimic.py:492
+msgid "Stoped:"
 msgstr ""
 
-#: ../OjubaMimic.py:472
+#: ../OjubaMimic.py:498
 msgid "Canceled"
 msgstr ""
 
-#: ../OjubaMimic.py:499 ../OjubaMimic.py:508
+#: ../OjubaMimic.py:521 ../OjubaMimic.py:530
 msgid "Exists; Skiped"
 msgstr ""
 
-#: ../OjubaMimic.py:518
+#: ../OjubaMimic.py:536
+msgid "There are corrently running oprations, Stop it?"
+msgstr ""
+
+#: ../OjubaMimic.py:542
 msgid "Options..."
 msgstr ""
 
-#: ../OjubaMimic.py:521
+#: ../OjubaMimic.py:547
 msgid "Save Options..."
 msgstr ""
 
-#: ../OjubaMimic.py:525
+#: ../OjubaMimic.py:551
 msgid "Save destination: "
 msgstr ""
 
-#: ../OjubaMimic.py:526
+#: ../OjubaMimic.py:552
 msgid "same as source"
 msgstr ""
 
-#: ../OjubaMimic.py:527
+#: ../OjubaMimic.py:553
 msgid "fixed"
 msgstr ""
 
-#: ../OjubaMimic.py:528
+#: ../OjubaMimic.py:554
 msgid "Select destination folder"
 msgstr ""
 
-#: ../OjubaMimic.py:531
+#: ../OjubaMimic.py:557
 msgid "If exists: "
 msgstr ""
 
-#: ../OjubaMimic.py:532
+#: ../OjubaMimic.py:558
 msgid "Skip"
 msgstr ""
 
-#: ../OjubaMimic.py:533
+#: ../OjubaMimic.py:559
 msgid "Overwrite"
 msgstr ""
 
-#: ../OjubaMimic.py:534
+#: ../OjubaMimic.py:560
 msgid "Rename"
 msgstr ""
 
 #. temporal
 #. x_o2.set_sensitive(False)
 #. x_o3.set_sensitive(False)
-#: ../OjubaMimic.py:547
+#: ../OjubaMimic.py:573
 msgid "Crop"
 msgstr ""
 
-#: ../OjubaMimic.py:550 ../OjubaMimic.py:557
+#: ../OjubaMimic.py:576 ../OjubaMimic.py:583
 msgid "Top"
 msgstr ""
 
-#: ../OjubaMimic.py:551 ../OjubaMimic.py:558
+#: ../OjubaMimic.py:577 ../OjubaMimic.py:584
 msgid "Bottom"
 msgstr ""
 
-#: ../OjubaMimic.py:552 ../OjubaMimic.py:559
+#: ../OjubaMimic.py:578 ../OjubaMimic.py:585
 msgid "Left"
 msgstr ""
 
-#: ../OjubaMimic.py:553 ../OjubaMimic.py:560
+#: ../OjubaMimic.py:579 ../OjubaMimic.py:586
 msgid "Right"
 msgstr ""
 
-#: ../OjubaMimic.py:555
+#: ../OjubaMimic.py:581
 msgid "Pad"
 msgstr ""
 
-#: ../OjubaMimic.py:562
+#: ../OjubaMimic.py:588
 msgid "Audio Bitrates"
 msgstr ""
 
-#: ../OjubaMimic.py:564 ../OjubaMimic.py:567
+#: ../OjubaMimic.py:590 ../OjubaMimic.py:593
 msgid "bit/s"
 msgstr ""
 
-#: ../OjubaMimic.py:565
+#: ../OjubaMimic.py:591
 msgid "Video Bitrates"
 msgstr ""
 
-#: ../OjubaMimic.py:569
+#: ../OjubaMimic.py:595
 msgid "Audio Quality"
 msgstr ""
 
-#: ../OjubaMimic.py:572
+#: ../OjubaMimic.py:598
 msgid "Video Quality"
 msgstr ""
 
-#: ../OjubaMimic.py:576
+#: ../OjubaMimic.py:602
 msgid "Audio Samplerate"
 msgstr ""
 
-#: ../OjubaMimic.py:581
+#: ../OjubaMimic.py:607
 msgid "Resize"
 msgstr ""
 
-#: ../OjubaMimic.py:588
+#: ../OjubaMimic.py:614
 msgid "Convert Options..."
 msgstr ""
 
-#: ../OjubaMimic.py:731
+#: ../OjubaMimic.py:817
 msgid "Select files to convert"
 msgstr ""
 
-#: ../OjubaMimic.py:733
+#: ../OjubaMimic.py:819
 msgid "All media files"
 msgstr ""
 
-#: ../OjubaMimic.py:739
+#: ../OjubaMimic.py:825
 msgid "All video files"
 msgstr ""
 
-#: ../OjubaMimic.py:744
+#: ../OjubaMimic.py:830
 msgid "All audio files"
 msgstr ""
 
-#: ../OjubaMimic.py:749
+#: ../OjubaMimic.py:835
 msgid "All files"
 msgstr ""
 
-#: ../OjubaMimic.py:762 ../OjubaMimic.py:765
+#: ../OjubaMimic.py:848 ../OjubaMimic.py:851
 msgid "MiMiC"
 msgstr ""
 
 #. about_dlg.set_version(version)
-#: ../OjubaMimic.py:767
+#: ../OjubaMimic.py:853
 msgid "Copyright © 2008-2011 Ojuba.org <core@ojuba.org>"
 msgstr ""
 
-#: ../OjubaMimic.py:768
+#: ../OjubaMimic.py:854
 msgid "Multi Media Converter"
 msgstr ""
 
-#: ../OjubaMimic.py:769
+#: ../OjubaMimic.py:855
 msgid ""
 "\n"
 "      Released under terms of Waqf Public License.\n"
