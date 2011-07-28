@@ -289,3 +289,6 @@ msgstr ""
 "      \"http://waqf.ojuba.org/license\"\n"
 "\n"
 "  "
+
+#~ msgid "Starting operations..."
+#~ msgstr "بدء العمليات"

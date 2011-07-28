@@ -5,7 +5,7 @@
 	Copyright © 2008-2011, Ojuba.org <core@ojuba.org>
 	Released under terms of Waqf Public License
 """
-import os
+import os, commands
 import os.path
 import random
 import signal
@@ -144,6 +144,13 @@ def bad(msg,w=None):
 	dlg.run()
 	dlg.destroy()
 
+def sure(msg,win=None):
+  dlg=gtk.MessageDialog(win,gtk.DIALOG_MODAL,gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO, msg)
+  dlg.connect("response", lambda *args: dlg.hide())
+  r=dlg.run()
+  dlg.destroy()
+  return r==gtk.RESPONSE_YES
+  
 def update_combo(c,ls):
   c.get_model().clear()
   for i in ls: c.append_text(i)
@@ -158,6 +165,7 @@ class MainWindow(gtk.Window):
   def __init__(self):
     gtk.Window.__init__(self)
     gtk.window_set_default_icon_name('ojuba-mimic')
+    self.cur_src_dir=None
     self.working_ls=[]
     self.done_ls=[]
     self.fileman=FileManager()
@@ -206,10 +214,12 @@ class MainWindow(gtk.Window):
     scroll.add(self.files_list)
     vb.pack_start(scroll,True, True, 0)
     self.options=options(self)
+    if self.options.conf.has_key('src_dir'):
+      self.cur_src_dir=self.options.conf['src_dir']
     vb.pack_start(self.options,False, False, 0)
     
     s_hb=gtk.HBox(False,0); vb.pack_start(s_hb,False, False, 0)
-    self.b_status = b = gtk.ToggleButton(_('Options'))
+    self.b_options = b = gtk.ToggleButton(_('Options'))
     b.connect('toggled', lambda *a: self.options.set_visible(b.get_active()))
     self.status_bar = s = gtk.Statusbar()
     s_hb.pack_start(b, False,False,2)
@@ -236,7 +246,7 @@ class MainWindow(gtk.Window):
     cols[-1].set_resizable(True)
     cols[-1].set_expand(True)
     cells.append(gtk.CellRendererProgress());
-    cols.append(gtk.TreeViewColumn('\t%s\t'%_('Status'), cells[-1], value=2,pulse=3,text=4))
+    cols.append(gtk.TreeViewColumn(' \t\t%s\t\t '%_('Status'), cells[-1], value=2,pulse=3,text=4))
     cols[-1].set_expand(False)
     self.files_list.set_headers_visible(True)
     self.b_stop.set_sensitive(False)
@@ -258,6 +268,15 @@ class MainWindow(gtk.Window):
     gobject.timeout_add(250, self.progress_cb)
     self.show_all()
     self.options.set_visible(False)
+
+  def active_controlls(self, v=False):
+    self.b_stop.set_sensitive(v)
+    self.b_convert.set_sensitive(not v)
+    self.tools_hb.set_sensitive(not v)
+    self.ctoools_hb.set_sensitive(not v)
+    self.b_options.set_sensitive(not v)
+    self.popupMenu.get_children()[2].set_sensitive(not v)
+    self.popupMenu.get_children()[3].set_sensitive(not v)
     
   def build_popup_Menu(self):
 		i = gtk.MenuItem(_("Open output folder"))
@@ -318,16 +337,12 @@ class MainWindow(gtk.Window):
       self.b_convert.set_sensitive(False)
       self.tools_hb.set_sensitive(True)
       self.ctoools_hb.set_sensitive(False)
+      #self.active_controlls(False)
       return True
-    self.b_stop.set_sensitive(len(self.working_ls)>0)
-    self.b_convert.set_sensitive(len(self.working_ls)<=0)
-    self.tools_hb.set_sensitive(len(self.working_ls)<=0)
-    self.ctoools_hb.set_sensitive(len(self.working_ls)<=0)
+    self.active_controlls(len(self.working_ls)>0)
     self.ctoools_hb.get_children()[0].set_sensitive(len(self.get_Iters())>0)
-    self.popupMenu.get_children()[2].set_sensitive(len(self.working_ls)<=0)
-    self.popupMenu.get_children()[3].set_sensitive(len(self.working_ls)<=0)
     if len(self.working_ls)<=0: return True
-    self.progressstatus(len(self.done_ls),len(self.files))
+    self.progressstatus()
     if not self.working_ls[0][0]:
       self.start_subprocess()
       return True
@@ -346,16 +361,18 @@ class MainWindow(gtk.Window):
       i[3]=-1
       i[4]='%s %d' % (_('Error'), r)
     done_item = self.working_ls[0][-1]
-    #del done_item[0]
-    #del done_item[3]
-    #print done_item
     self.done_ls.append(done_item)
     self.working_ls.pop(0)
-    self.progressstatus(len(self.done_ls),len(self.files))
+    if len(self.working_ls)>0: stat_str=''
+    else: stat_str=_('Finished:')
+    self.progressstatus(stat_str)
     return True
     
-  def progressstatus(self, cm, tot):
-    self.status_bar.push(self.context_id,'%s %i %s %i %s!' %(_('Converting:'),cm,_('file/files of'),tot,_('Compleated')))
+  def progressstatus(self, txt=''):
+    if txt=='': txt=_('Converting:')
+    cm=len(self.done_ls)
+    tot=len(self.files)
+    self.status_bar.push(self.context_id,'%s %i %s %i %s!' %(txt,cm,_('file/files of'),tot,_('Compleated')))
     
   def progress(self, *args):
     p,icmd,i,fn,ofn,sn=self.working_ls[0]
@@ -367,11 +384,12 @@ class MainWindow(gtk.Window):
     except OSError: self.pulse_cb(i); return True
     if working_size==0 or s<working_size: self.pulse_cb(i); return True
     pct=(float(working_size)/s)*100.0
+    self.files[(i,)][3]=-1
     self.files[(i,)][2]=pct
     i=self.files[(self.working_ls[0][2],)]; i[4]='%0.2f'%pct
     gtk.main_iteration()
     return True;
-  
+
   def pulse_cb(self, i):
     self.files[(i,)][2]=0
     self.files[(i,)][3]=int(abs(self.files[(i,)][3])+1)
@@ -392,6 +410,7 @@ class MainWindow(gtk.Window):
     #self.working_ls.append()=[None,icmd,working_on,fn,ofn]
 
   def drop_data_cb(self, widget, dc, x, y, selection_data, info, t):
+    if len(self.working_ls)>0: print 'Sorry, You can not add files while converting ...'; return 
     for i in selection_data.get_uris():
       if i.startswith('file://'):
         f=unquote(i[7:])
@@ -403,12 +422,19 @@ class MainWindow(gtk.Window):
         print "Protocol not supported in [%s]" % i
     dc.drop_finish (True, t);
     self.addstatus(len(self.files))
+    self.options.conf['src_dir']=self.cur_src_dir
+    self.options.save_conf()
   
   def add_files_cb(self, *args):
     dlg = add_dlg()
+    if self.cur_src_dir:
+      dlg.set_current_folder(self.cur_src_dir)
     if (dlg.run()==gtk.RESPONSE_ACCEPT):
       for i in dlg.get_filenames(): self.files.append([i,basename(i),0,-1,_('Not started')])
       self.addstatus(len(self.files))
+      self.cur_src_dir=os.path.dirname(i)
+    self.options.conf['src_dir']=self.cur_src_dir
+    self.options.save_conf()
     dlg.unselect_all()
 
   def addstatus(self, fc):
@@ -428,12 +454,8 @@ class MainWindow(gtk.Window):
     self.options.br_v.get_adjustment().set_all(frm[20],frm[21],frm[22],50, 100, 0)
 
   def convert_cb(self, *args):
-    self.b_convert.set_sensitive(False)
-    self.tools_hb.set_sensitive(False)
-    self.b_stop.set_sensitive(True)
-    self.popupMenu.get_children()[2].set_sensitive(False)
-    self.popupMenu.get_children()[3].set_sensitive(False)
-    self.status_bar.push(self.context_id,_('Starting operations...'))
+    self.b_options.set_active(False)
+    self.active_controlls(True)
     frm=formats[self.c_to.get_active()]
     cmd=self.options.build_cmd(formats[self.c_to.get_active()], self)
     if not cmd: return
@@ -463,8 +485,11 @@ class MainWindow(gtk.Window):
       #else: i[2]=100; i[3]=-1; i[4]='Done'
       #files[(working_on,)][2]= 100
     working_on=-1 # not needed
+    #if len(self.working_ls)>0:
+    #  self.status_bar.push(self.context_id,_('Starting operations...'))
 
   def stop_cb(self, *args):
+    self.progressstatus(_('Stoped:'))
     for j in self.working_ls:
       if j[0]:
         try: os.kill(j[0].pid,signal.SIGTERM); os.unlink(j[4])
@@ -472,11 +497,7 @@ class MainWindow(gtk.Window):
         i=self.files[(self.working_ls[0][2],)]
         i[4]=_('Canceled')
     self.working_ls=[]
-    self.b_convert.set_sensitive(True)
-    self.tools_hb.set_sensitive(True)
-    self.popupMenu.get_children()[2].set_sensitive(True)
-    self.popupMenu.get_children()[3].set_sensitive(True)
-    self.b_stop.set_sensitive(False)
+    self.active_controlls(False)
   
   def suffex_gen(self):
     for i in xrange(0,0xFFFF): yield str(i)
@@ -511,12 +532,16 @@ class MainWindow(gtk.Window):
     return 0
 
   def quit(self, *w):
+    if len(self.working_ls)>0:
+      if not sure(_('There are corrently running oprations, Stop it?'), self):return True
     self.stop_cb()
     gtk.main_quit()
     
 class options(gtk.Frame):
   def __init__(self, win):
     gtk.Frame.__init__(self,_('Options...'))
+    self.win=win
+    self.conf={}
     m_vb=gtk.VBox(False, 0)
     self.add(m_vb)
     save_fram=gtk.Frame(_('Save Options...'))
@@ -629,7 +654,14 @@ class options(gtk.Frame):
     c_vb.pack_start(self.hb_ar,False, False, 2)
     for i in (self.ar_c,self.ar_r): self.hb_ar.pack_start(i,False, False, 2)
     
-    self.dst_o2.connect('toggled', lambda *args: self.dst_b.set_sensitive(self.dst_o2.get_active()))
+    self.x_o3.set_active(True)
+    self.apply_conf()
+    
+    self.dst_o2.connect('toggled', self.save_conf)
+    self.x_o1.connect('toggled', self.save_conf)
+    self.x_o2.connect('toggled', self.save_conf)
+    self.dst_b.connect('file-set', self.save_conf)
+    #self.dst_b.connect('current-folder-changed', self.save_conf)
     for i,j in ((self.crp_c,crp_hb),(self.pad_c,pad_hb),(self.scale_c,scale_hb),(self.br_a_c,self.br_a),(self.br_v_c,self.br_v),(self.q_a_c,self.q_a),(self.q_v_c,self.q_v),(self.ar_c,self.ar_r)):
       i.connect('toggled', lambda i,j: j.set_sensitive(i.get_active()),j)
       i.set_active(False); j.set_sensitive(False)
@@ -642,8 +674,61 @@ class options(gtk.Frame):
     self.scale_h.connect_after('focus-out-event', lambda a,*args: a.activate() and False)
     self.dst_b.set_sensitive(self.dst_o2.get_active())
     self.scale_l.set_active(scale_ls.index("qvga 320x240"))
-    self.x_o3.set_active(True)
-
+    
+  def apply_conf(self):
+    self.load_conf()
+    self.dst_b.set_current_folder(self.conf['dst_b'])
+    self.dst_o1.set_active(self.conf['dst_o1'])
+    self.dst_o2.set_active(self.conf['dst_o2'])
+    self.x_o1.set_active(self.conf['x_o1'])
+    self.x_o2.set_active(self.conf['x_o2'])
+    self.x_o3.set_active(self.conf['x_o3'])
+    
+  def load_conf(self):
+    s=''
+    fn=os.path.expanduser('~/.ojuba-mimic.rc')
+    if os.path.exists(fn):
+      try: s=open(fn,'rt').read()
+      except OSError: pass
+    self.parse_conf(s)
+    self.conf['dst_o1']=(self.conf['dst_o1']=='True')
+    self.conf['dst_o2']=(self.conf['dst_o2']=='True')
+    self.conf['x_o1']=(self.conf['x_o1']=='True')
+    self.conf['x_o2']=(self.conf['x_o2']=='True')
+    self.conf['x_o3']=(self.conf['x_o3']=='True')
+    if os.path.ismount(self.conf['dst_b']) or os.path.isdir(self.conf['dst_b']): return
+    self.conf['dst_b']=os.path.realpath(os.path.expanduser('~'))
+    
+  def parse_conf(self, s):
+    self.default_conf()
+    l1=map(lambda k: k.split('=',1), filter(lambda j: j,map(lambda i: i.strip(),s.splitlines())) )
+    l2=map(lambda a: (a[0].strip(),a[1].strip()),filter(lambda j: len(j)==2,l1))
+    r=dict(l2)
+    self.conf.update(dict(l2))
+    return len(l1)==len(l2)
+    
+  def default_conf(self):
+    self.conf['dst_o1']=True #self.dst_o1.get_active()
+    self.conf['dst_o2']=False #self.dst_o2.get_active()
+    self.conf['dst_b']=os.path.realpath(os.path.expanduser('~'))
+    self.conf['x_o1']=False #self.x_o1.get_active()
+    self.conf['x_o2']=False #self.x_o2.get_active()
+    self.conf['x_o3']=True #self.x_o3.get_active()
+    
+  def save_conf(self, *args):
+    self.dst_b.set_sensitive(self.dst_o2.get_active())
+    self.conf['dst_o1']=self.dst_o1.get_active()
+    self.conf['dst_o2']=self.dst_o2.get_active()
+    self.conf['dst_b']=self.dst_b.get_filename()
+    self.conf['x_o1']=self.x_o1.get_active()
+    self.conf['x_o2']=self.x_o2.get_active()
+    self.conf['x_o3']=self.x_o3.get_active()
+    print "** saving conf", args,self.conf
+    fn=os.path.expanduser('~/.ojuba-mimic.rc')
+    s='\n'.join(map(lambda k: "%s=%s" % (k,str(self.conf[k])), self.conf.keys()))
+    try: open(fn,'wt').write(s)
+    except OSError: pass
+    
   def scale_cb(self, c,w,h):
     s=c.get_model()[c.get_active()][0]
     if s==_("custom"): return
@@ -838,8 +923,9 @@ def main():
   win=MainWindow()
   #win.show_all()
   #gobject.timeout_add(250, progress_cb)
-  gtk.main()
-
+  try: gtk.main()
+  except KeyboardInterrupt: win.stop_cb()
+  
 if __name__ == "__main__":
   main()
 
