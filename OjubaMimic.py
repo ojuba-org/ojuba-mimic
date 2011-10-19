@@ -34,6 +34,7 @@ ld=os.path.join(exedir,'..','share','locale')
 if not os.path.isdir(ld): ld=os.path.join(exedir, 'locale')
 gettext.install('ojuba-mimic', ld, unicode=0)
 
+# NOTE: type 'ffmpeg -formats' and 'ffmpeg -codecs' to get more info
 formats=[
 (".ogg _(Ogg/Theora video)", True, "-f ogg -acodec libvorbis -ac 2 %(audio_quality)s -vcodec libtheora %(video_quality)s", 1, 1, 0, 0, 1, 44100, 
  float, 3, 0, 10, float, 10, 1, 100, 
