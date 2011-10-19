@@ -2,7 +2,7 @@ Name: ojuba-mimic
 Obsoletes: mimic
 Summary: Ojuba Multi Media Converter based on ffmpeg
 URL: http://www.ojuba.org
-Version: 0.2.0
+Version: 0.2.1
 Release: 1%{?dist}
 Source0: %{name}-%{version}.tar.bz2
 License: Waqf
