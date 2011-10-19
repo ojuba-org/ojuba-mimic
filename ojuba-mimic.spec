@@ -4,7 +4,7 @@ Summary: Ojuba Multi Media Converter based on ffmpeg
 URL: http://www.ojuba.org
 Version: 0.2.1
 Release: 1%{?dist}
-Source0: %{name}-%{version}.tar.bz2
+Source0: http://git.ojuba.org/cgit/%{name}/snapshot/%{name}-%{version}.tar.bz2
 License: Waqf
 Group: Applications/Multimedia
 BuildArch: noarch
