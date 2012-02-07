@@ -6,20 +6,16 @@
 	Released under terms of Waqf Public License
 """
 import os, commands
-import os.path
 import random
 import signal
 import sys
 import gobject
 import gtk
-import pango
-import string
 import re
-import time
 import gettext
 from urllib import unquote
-from os.path import dirname,basename
 from subprocess import Popen, PIPE
+from datetime import timedelta
 import time
 #".ext (human readable type)", is_video, cmd, q_a,q_v, br_a,br_v, allow_audio_resample, default_ar
 # audio quality float/int, default, from , to, 
@@ -164,11 +160,15 @@ def create_combo(c, ls, w=1):
   return c
 
 class MainWindow(gtk.Window):
+  if_dura_re=re.compile(r'''Duration:\s*(\d+):(\d+):(\d+.?\d*)''')
+  of_dura_re=re.compile(r'''time=\s*(\d+):(\d+):(\d+.?\d*)''')
   def __init__(self):
     gtk.Window.__init__(self)
     gtk.window_set_default_icon_name('ojuba-mimic')
     self.cur_src_dir=None
     self.working_ls=[]
+    self.ouput_fn='/tmp/mimic.tmp'
+    self.if_dura=0
     self.done_ls=[]
     self.fileman=FileManager()
     self.set_title(_('MiMiC :: Multi Media Converter'))
@@ -198,7 +198,7 @@ class MainWindow(gtk.Window):
     self.b_convert=gtk.Button(stock=gtk.STOCK_CONVERT)
     self.b_stop=gtk.Button(stock=gtk.STOCK_STOP)
     b_about=gtk.Button(stock=gtk.STOCK_ABOUT)
-    self.files = gtk.ListStore(str,str,float,int,str) # fn, basename, percent, pulse, label
+    self.files = gtk.ListStore(str,str,float,int,str) # fn, os.path.basename, percent, pulse, label
     self.files_list=gtk.TreeView(self.files)
     self.files_list.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
 
@@ -265,7 +265,7 @@ class MainWindow(gtk.Window):
     # sample list for testing
     #ls=[("/usr/share/file1.avi",10.0),("file2",20)]
     #self.files.clear()
-    #for j,k in ls: self.files.append([j,basename(j),k,-1,None])
+    #for j,k in ls: self.files.append([j,os.path.basename(j),k,-1,None])
     #self.files[(1,)] = (self.files[1][0], self.files[1][1], 90,-1,"Done %d %%" % 90)
     gobject.timeout_add(250, self.progress_cb)
     self.show_all()
@@ -378,17 +378,16 @@ class MainWindow(gtk.Window):
     
   def progress(self, *args):
     p,icmd,i,fn,ofn,sn=self.working_ls[0]
-    working_size=0
-    try: working_size=os.path.getsize(ofn)
-    except OSError, e: self.pulse_cb(i); return True
-    if working_size==0: self.pulse_cb(i); return True
-    try: s=os.path.getsize(fn)
-    except OSError: self.pulse_cb(i); return True
-    if working_size==0 or s<working_size: self.pulse_cb(i); return True
-    pct=(float(working_size)/s)*100.0
+    #print self.get_dura_cb()
+    #of_dura=self.get_dura_cb_old(ofn)
+    #if of_dura < 0: self.pulse_cb(i); return True
+    #if_dura=self.get_dura_cb_old(fn)
+    #if if_dura < of_dura: self.pulse_cb(i); return True
+    if_dura, of_dura = self.get_dura_cb()
+    pct=(float(of_dura)/if_dura)*100.0
     self.files[(i,)][3]=-1
     self.files[(i,)][2]=pct
-    i=self.files[(self.working_ls[0][2],)]; i[4]='%0.2f'%pct
+    i=self.files[(self.working_ls[0][2],)]; i[4]='%0.2f%%'%pct
     gtk.main_iteration()
     return True;
 
@@ -397,7 +396,29 @@ class MainWindow(gtk.Window):
     self.files[(i,)][3]=int(abs(self.files[(i,)][3])+1)
     gtk.main_iteration()
 
+  def get_dura_cb(self):
+    out=open(self.ouput_fn,'r').read().strip()
+    ifd=self.if_dura_re.findall(out)
+    ofd=self.of_dura_re.findall(out)
+    try: i, o = ifd[-1], ofd[-1]
+    except IndexError: return 100, 0
+    return self.convert_to_sec(map(lambda a: float(a),i)), self.convert_to_sec(map(lambda a: float(a),o))
+  
+  def convert_to_sec(self, dd):
+     return timedelta(hours=dd[0], minutes=dd[1], seconds=dd[2]).total_seconds()
+  
+  def get_dura_cb_old(self, fn):
+    if not os.path.isfile(fn): return -1
+    c = Popen(['ffmpeg', '-i', fn], stdout=PIPE, stderr=PIPE)
+    o, e = c.communicate()
+    dd=self.if_dura_re.search(e)
+    if not hasattr(dd, 'groups'): return -1
+    dd = map(lambda a: float(a), dd.groups())
+    return timedelta(hours=dd[0], minutes=dd[1], seconds=dd[2]).total_seconds()
+    
   def start_subprocess(self):
+    TMP_F=file(self.ouput_fn,'w')
+    TMP_F.write('')
     if self.working_ls[0][3]==self.working_ls[0][4]:
       if self.options.x_o3.get_active():
         if not self.rename_cb(): return self.skiped()
@@ -407,7 +428,8 @@ class MainWindow(gtk.Window):
         if not self.rename_cb(): return self.skiped()
       elif self.options.x_o1.get_active():
         return self.skiped()
-    self.working_ls[0][0]=Popen(self.working_ls[0][1],0,'/bin/sh',shell=True)
+    cmd = self.working_ls[0][1]
+    self.working_ls[0][0]=c=Popen(cmd, stderr=TMP_F,stdout=PIPE)
     i=self.files[(self.working_ls[0][2],)]; i[2]=0; i[3]=-1; i[4]=_('Converting ...')
     #self.working_ls.append()=[None,icmd,working_on,fn,ofn]
 
@@ -417,7 +439,7 @@ class MainWindow(gtk.Window):
       if i.startswith('file://'):
         f=unquote(i[7:])
         if os.path.isfile(f):
-          self.files.append([f,basename(f),0,-1,_('Not started')])
+          self.files.append([f,os.path.basename(f),0,-1,_('Not started')])
         else:
           print "Can not add folders [%s]" % f
       else:
@@ -432,7 +454,7 @@ class MainWindow(gtk.Window):
     if self.cur_src_dir:
       dlg.set_current_folder(self.cur_src_dir)
     if (dlg.run()==gtk.RESPONSE_ACCEPT):
-      for i in dlg.get_filenames(): self.files.append([i,basename(i),0,-1,_('Not started')])
+      for i in dlg.get_filenames(): self.files.append([i,os.path.basename(i),0,-1,_('Not started')])
       self.addstatus(len(self.files))
       self.cur_src_dir=os.path.dirname(i)
     self.options.conf['src_dir']=self.cur_src_dir
@@ -466,13 +488,14 @@ class MainWindow(gtk.Window):
     self.working_ls=[]
     for working_on,i in enumerate(self.files):
       fn=i[0]
-      bfn=basename(fn)
-      if not oodir: odir=dirname(fn)
+      bfn=os.path.basename(fn)
+      if not oodir: odir=os.path.dirname(fn)
       else: odir=oodir
       ofn=os.path.join(odir, bfn.partition('.')[0]+frm[0][:frm[0].index(' ')])
       #if fn==ofn or os.path.exists(ofn): i[4]='Exists; Skiped'; continue
       #i[2]=0; i[3]=-1; i[4]='Converting ...'
-      icmd="ffmpeg -y -i 'file://%s' %s 'file://%s'" % (fn,cmd,ofn)
+      
+      icmd=self.cmd_to_list(fn,ofn,cmd) 
       print "*** ", icmd
       #print icmd
       serial=[cmd,fn]
@@ -490,8 +513,15 @@ class MainWindow(gtk.Window):
     #if len(self.working_ls)>0:
     #  self.status_bar.push(self.context_id,_('Starting operations...'))
 
+  def cmd_to_list(self, fn, ofn, cmd):
+    s=["ffmpeg", "-y", "-i", "file://%s"%fn]
+    s.extend(cmd.split())
+    s.append("file://%s"%ofn)
+    return s
+    
   def stop_cb(self, *args):
     self.progressstatus(_('Stoped:'))
+    if os.path.isfile(self.ouput_fn): os.unlink(self.ouput_fn)
     for j in self.working_ls:
       if j[0]:
         try: os.kill(j[0].pid,signal.SIGTERM); os.unlink(j[4])
@@ -509,8 +539,8 @@ class MainWindow(gtk.Window):
       for i in self.suffex_gen(): yield chr(j)+str(i)
 
   def suggest_name(self, f):
-    dn=dirname(f)
-    fn=basename(f)
+    dn=os.path.dirname(f)
+    fn=os.path.basename(f)
     b,d,e=fn.partition('.')
     for i in self.suffex_gen():
        f=os.path.join(dn,''.join((b,'_',i,d,e)))
@@ -524,7 +554,7 @@ class MainWindow(gtk.Window):
       self.working_ls.pop(0); return False
     fn=self.working_ls[0][3]
     cmd=self.options.build_cmd(formats[self.c_to.get_active()], self)
-    self.working_ls[0][1]="ffmpeg -y -i 'file://%s' %s 'file://%s'" % (fn,cmd,ofn)
+    self.working_ls[0][1]=self.cmd_to_list(fn,ofn,cmd)
     return True
 
   def skiped(self):
