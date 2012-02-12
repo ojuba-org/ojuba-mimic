@@ -17,6 +17,7 @@ from urllib import unquote
 from subprocess import Popen, PIPE
 from datetime import timedelta
 import time
+
 #".ext (human readable type)", is_video, cmd, q_a,q_v, br_a,br_v, allow_audio_resample, default_ar
 # audio quality float/int, default, from , to, 
 # video quality float/int, default, from , to,
@@ -31,83 +32,107 @@ if not os.path.isdir(ld): ld=os.path.join(exedir, 'locale')
 gettext.install('ojuba-mimic', ld, unicode=0)
 
 # NOTE: type 'ffmpeg -formats' and 'ffmpeg -codecs' to get more info
-formats=[
-(".ogg _(Ogg/Theora video)", True, "-f ogg -acodec libvorbis -ac 2 %(audio_quality)s -vcodec libtheora %(video_quality)s", 1, 1, 0, 0, 1, 44100, 
- float, 3, 0, 10, float, 10, 1, 100, 
- 0, 0, 0, 0, 0, 0, [], 'True',''),
-(".3gp (3GP)", True, "-f 3gp -acodec libopencore_amrnb -ar 8000 -ac 1 -vcodec h263", 0, 0, 1, 1, 0, 8000, 
- float, 3, 0, 10, float, 10, 1, 100, 
- 4750, 4750, 12200, 4750, 4750, 10000000, [], 'size in ("-s 128x96", "-s 176x144", "-s 352x288", "-s 704x576", "-s 1408x1152") and audio_bitrate in (4750, 5150, 5900, 6700, 7400, 7950, 10200, 12200)',_('choose a valid size and bitrate (try cif and 4750)')),
-(".flv _(Flash Video)", True, '-acodec libmp3lame -r 25 -vcodec flv', 0, 1, 1, 0, 1, 22050, 
+formats={
+"OGG (Ogg/Theora video)":
+  ('.ogv', True, "-f ogg -acodec libvorbis -ac 2 %(audio_quality)s -vcodec libtheora %(video_quality)s", 1, 1, 0, 0, 1, 44100, 
+  float, 3, 0, 10, float, 10, 1, 100, 
+  0, 0, 0, 0, 0, 0, [], 'True',''),
+"3GP (3GP)":
+  ('.3gp', True, "-f 3gp -acodec aac -strict experimental -ar 8000 -ac 1 -vcodec h263", 0, 0, 1, 1, 0, 8000, 
+  float, 3, 0, 10, float, 10, 1, 100, 
+  4750, 4750, 12200, 4750, 4750, 10000000, [], 'size in ("-s 128x96", "-s 176x144", "-s 352x288", "-s 704x576", "-s   1408x1152") and audio_bitrate in (4750, 5150, 5900, 6700, 7400, 7950, 10200, 12200)',_('choose a valid size and   bitrate (try cif and 4750)')),
+"FLV (Flash Video)":
+ ('.flv', True, '-f flv -acodec libmp3lame -r 25 -vcodec flv', 0, 1, 1, 0, 1, 22050, 
  float, 3, 0, 10, int, 10, 1, 100,
  32000, 8000, 1000000, 100000, 10000, 10000000, [], 'audio_samplerate in (44100, 22050, 11025)',_('audio samplerate should be 44100, 22050 or 11025')),
-(".avi (msmpeg4)", True, "-f avi -acodec libmp3lame -vcodec msmpeg4v2", 0, 0, 1, 1, 1, 44100, 
+"AVI (msmpeg4)":
+ ('.avi', True, "-f avi -acodec libmp3lame -vcodec msmpeg4v2", 0, 0, 1, 1, 1, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [], 'True',''),
-(".wmv (msmpeg4)", True, "-f asf -acodec libmp3lame -vcodec msmpeg4", 0, 0, 1, 1, 1, 44100, 
+"WMV (msmpeg4)": 
+('.wmv', True, "-f asf -acodec libmp3lame -vcodec msmpeg4", 0, 0, 1, 1, 1, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [], 'True',''),
-(".wmv (wmv1)", True, "-f asf -acodec wmav1 -vcodec wmv1", 0, 0, 1, 1, 1, 44100, 
+"WMV (wmv1)": 
+('.wmv', True, "-f asf -acodec wmav1 -vcodec wmv1", 0, 0, 1, 1, 1, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [], 'True',''),
-(".wmv (wmv2)",True,"-f asf -acodec wmav2 -vcodec wmv2", 0, 0, 1, 1, 1, 44100, 
+"WMV (wmv2)": 
+('.wmv', True,"-f asf -acodec wmav2 -vcodec wmv2", 0, 0, 1, 1, 1, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [], 'True',''),
-(".mpg (VCD)",True, "-f mpeg -target ntsc-vcd", 0, 0, 0, 0, 0, 44100, 
+"MPG (VCD)": 
+('.mpg', True, "-f mpeg -target ntsc-vcd", 0, 0, 0, 0, 0, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, ['-flags qprd','-flags mv0','-flags skiprd','-g 100'], 'True',''),
-(".mpg (DVD)",True, "-f mpeg -target ntsc-dvd", 0, 0, 0, 0, 0, 44100, 
+"MPG (DVD)": 
+('.mpg', True, "-f mpeg -target ntsc-dvd", 0, 0, 0, 0, 0, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, ['-flags qprd','-flags mv0','-flags skiprd','-g 100'], 'True',''),
-(".mpg (film)",True, "-f mpeg -target ntsc-svcd", 0, 0, 0, 0, 0, 44100, 
+"MPG (film)": 
+('.mpg', True, "-f mpeg -target ntsc-svcd", 0, 0, 0, 0, 0, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, ['-flags qprd','-flags mv0','-flags skiprd','-g 100'], 'True',''),
-(".mpg (mpeg1)",True, "-f mpeg -acodec libmp3lame -vcodec mpeg1video -mbd rd +trell -cmp 2 -subcmp 2 -bf 2", 0, 0, 1, 1, 1, 44100, 
+"MPG (mpeg1)": 
+('.mpg', True, "-f mpeg -acodec libmp3lame -vcodec mpeg1video -mbd rd -cmp 2 -subcmp 2 -bf 2", 0, 0, 1, 1, 1, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, ['-flags qprd','-flags mv0','-flags skiprd','-g 100'], 'True',''),
-(".mpg (mpeg2)",True, "-f mpeg -acodec libmp3lame -vcodec mpeg2video -mbd rd  +trell -cmp 2 -subcmp 2 -bf 2", 0, 0, 1, 1, 1, 44100, 
+"MPG (mpeg2)": 
+('.mpg', True, "-f mpeg -acodec libmp3lame -vcodec mpeg2video -mbd rd -cmp 2 -subcmp 2 -bf 2", 0, 0, 1, 1, 1, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [], 'True',''),
-(".mp4 (psp ~30fps)",True,"-f psp -acodec libfaac -vcodec mpeg4 -ar 24000 -r 30000/1001 -bf 2", 0, 0, 1, 1, 0, 24000, 
+"MP4 (psp ~30fps)": 
+('.mp4', True,"-f psp -acodec aac -strict experimental -vcodec mpeg4 -ar 24000 -r 30000/1001 -bf 2", 0, 0, 1, 1, 0, 24000, 
  int, 0, 0, 0, int, 0, 0, 0,  
 32000, 8000, 1000000, 100000, 10000, 10000000, [],
  'not size and width*height<=76800 and width%16==0 and height%16==0',_('Width and Hight must be multibles of 16 or too big resolution')),
-(".mp4 (psp ~15fps)",True,"-f psp -acodec libfaac -vcodec mpeg4 -ar 24000 -r 15000/1001 -bf 2", 0, 0, 1, 1, 0, 24000, 
+"MP4 (psp ~15fps)": 
+('.mp4', True,"-f psp -acodec aac -strict experimental -vcodec mpeg4 -ar 24000 -r 15000/1001 -bf 2", 0, 0, 1, 1, 0, 24000, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [],
  'not size or width*height<=76800 and width%16==0 and height%16==0',_('Width and Hight must be multibles of 16 or too big resolution')),
-('.mp4 (ipod)',True,'--enable-libfaac -acodec libfaac -vcodec mpeg4 -mbd 2 -flags +mv4 -ac 2 -cmp 2 -subcmp 2 -bf 2', 0, 0, 1, 1, 1, 22050, 
+'MP4 (ipod)': 
+('.mp4', True,'-f mp4 -acodec aac -strict experimental -vcodec mpeg4 -mbd 2 -flags +mv4 -ac 2 -cmp 2 -subcmp 2 -bf 2', 0, 0, 1, 1, 1, 22050, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [],
  'not size or width<=320 and height<=240',_('too big resolution, resize it so that width<=320 and height<=240')),
-('.avi (MPEG4 like DviX)',True,'-f avi -mbd rd -flags +mv4+aic +trell -cmp 2 -subcmp 2 -g 300 -acodec libfaac -vcodec mpeg4 -vtag DIV5 -bf 2', 0, 0, 1, 1, 1, 44100, 
+'AVI (MPEG4 like DviX)': 
+('.avi', True,'-f avi -mbd rd -flags +mv4+aic -cmp 2 -subcmp 2 -g 300 -acodec aac -strict experimental -vcodec mpeg4 -vtag DIV5 -bf 2', 0, 0, 1, 1, 1, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [],'True',''),
-('.avi (xvid)', True, '-f avi -mbd rd -flags +mv4+aic +trell -cmp 2 -subcmp 2 -g 300 -acodec libmp3lame -vcodec libxvid -vtag xvid -bf 2', 0, 0, 1, 1, 1, 44100, 
+'AVI (xvid)': 
+('.avi', True, '-f avi -mbd rd -flags +mv4+aic -cmp 2 -subcmp 2 -g 300 -acodec libmp3lame -vcodec libxvid -vtag xvid -bf 2', 0, 0, 1, 1, 1, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [],'True',''),
-('.mpg (mpeg4)', True, '-f mpeg -mbd rd -flags +mv4+aic +trell -cmp 2 -subcmp 2 -g 300 -acodec libfaac -vcodec mpeg4 -vtag DIV5 -bf 2', 0, 0, 1, 1, 1, 44100, 
+'MPG (mpeg4)': 
+('.mpg', True, '-f mpeg -mbd rd -flags +mv4+aic  -cmp 2 -subcmp 2 -g 300 -acodec aac -strict experimental -vcodec mpeg4 -vtag DIV5 -bf 2', 0, 0, 1, 1, 1, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [],'True',''),
-('.mpg (xvid mpeg4)',True,'-f mpeg -mbd rd -flags +mv4+aic +trell -cmp 2 -subcmp 2 -g 300 -acodec libfaac -vcodec libxvid -vtag xvid -bf 2', 0, 0, 1, 1, 1, 44100, 
+'MPG (xvid mpeg4)': 
+('.mpg', True,'-f mpeg -mbd rd -flags +mv4+aic -cmp 2 -subcmp 2 -g 300 -acodec aac -strict experimental -vcodec libxvid -vtag xvid -bf 2', 0, 0, 1, 1, 1, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [],'True',''),
-('.wma (wma1)', False, '-f asf -vn -acodec wmav1', 0, 0, 1, 0, 1, 44100, 
+'WMA (wma1)': 
+('.wma', False, '-f asf -vn -acodec wmav1', 0, 0, 1, 0, 1, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [],'True',''),
-('.wma (wma2)', False, '-f asf -vn -acodec wmav2', 0, 0, 1, 0, 1, 44100, 
+'WMA (wma2)': 
+('.wma', False, '-f asf -vn -acodec wmav2', 0, 0, 1, 0, 1, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [],'True',''),
-('.mp3 (MP3)', False,'-vn -acodec libmp3lame', 0, 0, 1, 1, 1, 44100, 
+'MP3 (MP3)': 
+('.mp3', False,'-f mp3 -vn -acodec libmp3lame', 0, 0, 1, 1, 1, 44100, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [],'True',''),
-('.wav (adpcm_ms)',False, '-vn -acodec adpcm_ms', 0, 0, 0, 0, 1, 11025, 
+'WAV (adpcm_ms)': 
+('.wav', False, '-f wav -vn -acodec adpcm_ms', 0, 0, 0, 0, 1, 11025, 
  int, 0, 0, 0, int, 0, 0, 0, 
 32000, 8000, 1000000, 100000, 10000, 10000000, [],'True',''),
-('.ogg (Ogg/Vorbis audio)',False,'-vn -f ogg -acodec libvorbis -ac 2 %(audio_quality)s', 1, 0, 0, 0, 1, 44100, 
+'OGG (Ogg/Vorbis audio)': 
+('.oga', False,'-vn -f ogg -acodec libvorbis -ac 2 %(audio_quality)s', 1, 0, 0, 0, 1, 44100, 
  float, 3, 0, 10, int, 10, 0, 100, 
  0, 0, 0, 0, 0, 0, [], 'True','')
-]
+}
 
 scale_ls=["sqcif 128x96", "qcif 176x144", "cif 352x288", "4cif 704x576",
 "qqvga 160x120", "qvga 320x240", "vga 640x480", "svga 800x600",
@@ -123,7 +148,7 @@ banner_list=[
 'قُلْ لِلْمُؤْمِنِينَ يَغُضُّوا مِنْ أَبْصَارِهِمْ وَيَحْفَظُوا فُرُوجَهُمْ\nذَلِكَ أَزْكَى لَهُمْ إِنَّ اللَّهَ خَبِيرٌ بِمَا يَصْنَعُونَ',
 'فَخَلَفَ مِنْ بَعْدِهِمْ خَلْفٌ أَضَاعُوا الصَّلَاةَ وَاتَّبَعُوا الشَّهَوَاتِ فَسَوْفَ يَلْقَوْنَ غَيّاً'
 ]
-formats.sort()
+
 def info(msg,w=None):
 	if not w: w=win
 	dlg = gtk.MessageDialog (w,
@@ -186,14 +211,14 @@ class MainWindow(gtk.Window):
     for i in (gtk.STATE_NORMAL,gtk.STATE_ACTIVE,gtk.STATE_PRELIGHT,gtk.STATE_SELECTED,gtk.STATE_INSENSITIVE):
       l_banner_box.modify_bg(i,gtk.gdk.color_parse("#fffff8"))
     l_banner=gtk.Label(); l_banner.set_justify(gtk.JUSTIFY_CENTER)
-    l_banner.set_markup('''<span face="Simplified Naskh" color="#204000"  size="x-large">%(verse)s</span>''' % {'verse':random.choice(banner_list)})
+    l_banner.set_markup('''<span face="Simplified Naskh" color="#2040FF"  size="x-large">%(verse)s</span>''' % {'verse':random.choice(banner_list)})
     l_banner_box.add(l_banner)
     
     b_add=gtk.Button(stock=gtk.STOCK_ADD)
     b_rm=gtk.Button(stock=gtk.STOCK_REMOVE)
     b_clear=gtk.Button(stock=gtk.STOCK_CLEAR)
     e_to=gtk.Label(_('to: '))
-    self.c_to=create_combo(gtk.combo_box_new_text(), map(lambda i:i[0],formats),2)
+    self.c_to=create_combo(gtk.combo_box_new_text(), sorted(formats),2)
 
     self.b_convert=gtk.Button(stock=gtk.STOCK_CONVERT)
     self.b_stop=gtk.Button(stock=gtk.STOCK_STOP)
@@ -357,13 +382,13 @@ class MainWindow(gtk.Window):
       i[2]=100
       i[3]=-1
       i[4]=_('Done')
+      done_item = self.working_ls[0][-1]
+      if not done_item in self.done_ls: self.done_ls.append(done_item)
     else:
       i=self.files[(self.working_ls[0][2],)]
       i[2]=100
       i[3]=-1
       i[4]='%s %d' % (_('Error'), r)
-    done_item = self.working_ls[0][-1]
-    self.done_ls.append(done_item)
     self.working_ls.pop(0)
     if len(self.working_ls)>0: stat_str=''
     else: stat_str=_('Finished:')
@@ -374,6 +399,7 @@ class MainWindow(gtk.Window):
     if txt=='': txt=_('Converting:')
     cm=len(self.done_ls)
     tot=len(self.files)
+    if cm>tot: cm=tot
     self.status_bar.push(self.context_id,'%s %i %s %i %s!' %(txt,cm,_('file/files of'),tot,_('Compleated')))
     
   def progress(self, *args):
@@ -465,7 +491,8 @@ class MainWindow(gtk.Window):
     self.status_bar.push(self.context_id,'%s %i %s' %(_('Click Convert, to start converting'),fc,_('file/files')))
     
   def c_to_cb(self, c,*args):
-    frm=formats[c.get_active()]
+    #frm=formats[c.get_active()]
+    frm = formats[self.c_to.get_model()[self.c_to.get_active()][0]]
     for i,j,k in ((frm[3],self.options.q_a_c,self.options.q_a),(frm[4],self.options.q_v_c,self.options.q_v),(frm[5],self.options.br_a_c,self.options.br_a),(frm[6],self.options.br_v_c,self.options.br_v)):
       j.set_sensitive(i)
       if not i: k.set_sensitive(False); j.set_active(False)
@@ -478,11 +505,11 @@ class MainWindow(gtk.Window):
     self.options.br_v.get_adjustment().set_all(frm[20],frm[21],frm[22],50, 100, 0)
 
   def convert_cb(self, *args):
-    self.b_options.set_active(False)
     self.active_controlls(True)
-    frm=formats[self.c_to.get_active()]
-    cmd=self.options.build_cmd(formats[self.c_to.get_active()], self)
+    frm = formats[self.c_to.get_model()[self.c_to.get_active()][0]]
+    cmd=self.options.build_cmd(frm, self)
     if not cmd: return
+    self.b_options.set_active(False)
     if self.options.dst_o2.get_active(): oodir=self.options.dst_b.get_filename();
     else: oodir=False
     self.working_ls=[]
@@ -491,13 +518,16 @@ class MainWindow(gtk.Window):
       bfn=os.path.basename(fn)
       if not oodir: odir=os.path.dirname(fn)
       else: odir=oodir
-      ofn=os.path.join(odir, bfn.partition('.')[0]+frm[0][:frm[0].index(' ')])
+      ofn=os.path.join(odir, bfn.partition('.')[0]+frm[0])
       #if fn==ofn or os.path.exists(ofn): i[4]='Exists; Skiped'; continue
       #i[2]=0; i[3]=-1; i[4]='Converting ...'
       
-      icmd=self.cmd_to_list(fn,ofn,cmd) 
-      print "*** ", icmd
-      #print icmd
+      icmd=self.cmd_to_list(fn,ofn,cmd)
+      
+      picmd=map(lambda a:a,icmd)
+      picmd[3]='"%s"'%(picmd[3])
+      picmd[-1]='"%s"'%(picmd[-1])
+      print "***\n", ' '.join(picmd)
       serial=[cmd,fn]
       #print serial, self.done_ls
       # escape done items
@@ -514,9 +544,9 @@ class MainWindow(gtk.Window):
     #  self.status_bar.push(self.context_id,_('Starting operations...'))
 
   def cmd_to_list(self, fn, ofn, cmd):
-    s=["ffmpeg", "-y", "-i", "file://%s"%fn]
+    s=["ffmpeg", "-y", "-i", fn]
     s.extend(cmd.split())
-    s.append("file://%s"%ofn)
+    s.append(ofn)
     return s
     
   def stop_cb(self, *args):
@@ -553,7 +583,8 @@ class MainWindow(gtk.Window):
       i=self.files[(self.working_ls[0][2],)]; i[4]=_('Exists; Skiped');
       self.working_ls.pop(0); return False
     fn=self.working_ls[0][3]
-    cmd=self.options.build_cmd(formats[self.c_to.get_active()], self)
+    frm = formats[self.c_to.get_model()[self.c_to.get_active()][0]]
+    cmd=self.options.build_cmd(frm, self)
     self.working_ls[0][1]=self.cmd_to_list(fn,ofn,cmd)
     return True
 
@@ -642,18 +673,27 @@ class options(gtk.Frame):
     self.scale_w=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 1, 10, 0))
     self.scale_x=gtk.Label("x");
     self.scale_h=gtk.SpinButton(gtk.Adjustment(0, 0, 10000, 1, 10, 0))
-
-    conv_fram=gtk.Frame(_('Convert Options...'))
-    conv_fram.set_shadow_type(gtk.SHADOW_OUT)
-    c_vb=gtk.VBox(False, 0)
+    cs_vb=gtk.VBox(False, 0)
     c_hb=gtk.HBox(False, 0)
+    convs_fram=gtk.Frame(_('Convert Options...'))
+    convs_fram.set_shadow_type(gtk.SHADOW_OUT)
+    convs_fram.add(cs_vb)
+    c_hb.pack_start(convs_fram,False, False, 2)
+    #m_vb.pack_start(c_hb,False, False, 2)
+
+    c_vb=gtk.VBox(False, 0)
+    conv_fram=gtk.Frame(_('Advanced Options...'))
+    conv_fram.set_shadow_type(gtk.SHADOW_OUT)
     conv_fram.add(c_vb)
     c_hb.pack_start(conv_fram,False, False, 2)
     m_vb.pack_start(c_hb,False, False, 2)
 
-    #LOGO=gtk.Image()
-    #LOGO.set_from_file('./ojuba-mimic.svg')
-    #c_hb.pack_start(LOGO,True, False, 2)
+    hb=gtk.HBox(False,0)
+    cs_vb.pack_start(hb,False, False, 2)
+    self.quality_l = q = create_combo(gtk.combo_box_new_text(), ['a','b','c'],1)
+    q.connect('changed', self.set_options_cb)
+    hb.pack_start(gtk.Label(_("Quality:")),False, False, 2)
+    hb.pack_start(q,True, True, 2)
     
     hb=gtk.HBox(False,0)
     c_vb.pack_start(hb,False, False, 2)
@@ -706,6 +746,9 @@ class options(gtk.Frame):
     self.scale_h.connect_after('focus-out-event', lambda a,*args: a.activate() and False)
     self.dst_b.set_sensitive(self.dst_o2.get_active())
     self.scale_l.set_active(scale_ls.index("qvga 320x240"))
+    
+  def set_options_cb(self, c):
+    print c.get_active()
     
   def apply_conf(self):
     self.load_conf()
@@ -777,7 +820,7 @@ class options(gtk.Frame):
       l.set_active(scale_ls.index(scale_dict[S]))
 
   def build_cmd(self, frm, win=None):
-    ext=frm[0].split(' ')[0]
+    ext=frm[0] #.split(' ')[0]
     
     opts={}
     # make things even:
@@ -827,7 +870,7 @@ class options(gtk.Frame):
     else: opts['br_a']=opts['audio_bitrate']=''
     if self.br_v_c.get_active():
       opts['video_bitrate']=self.br_v.get_value()
-      opts['br_v']='-b %d' % self.br_v.get_value()
+      opts['br_v']='-b %dK' % self.br_v.get_value()
     else: opts['br_v']=opts['video_bitrate']=''
     if self.ar_c.get_active():
       opts['audio_samplerate']=int(self.ar_r.get_model()[self.ar_r.get_active()][0])
