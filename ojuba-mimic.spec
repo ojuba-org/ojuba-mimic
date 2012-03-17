@@ -9,7 +9,7 @@ License: Waqf
 Group: Applications/Multimedia
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: python
+BuildRequires: python, ImageMagick
 Requires: python, pygtk2, ffmpeg
 
 # %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
