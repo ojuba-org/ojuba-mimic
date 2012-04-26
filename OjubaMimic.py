@@ -197,11 +197,12 @@ class MainWindow(Gtk.Window):
 		self.done_ls=[]
 		self.fileman=FileManager()
 		self.set_title(_('MiMiC :: Multi Media Converter'))
-		#FIXME: drag and drop.
-		#self.drag_dest_set(Gtk.DestDefaults.ALL, Gtk.TargetList.add_uri_targets(),(1<<5)-1)
-		
 		self.connect('destroy', self.quit_cb)
 		self.connect('delete_event', self.quit_cb)
+		targets=Gtk.TargetList.new([])
+		targets.add_uri_targets((1<<5)-1)
+		self.drag_dest_set(Gtk.DestDefaults.ALL, [], Gdk.DragAction.COPY)
+		self.drag_dest_set_target_list(targets)
 		self.connect('drag-data-received',self.drop_data_cb)
 		
 		vb = Gtk.VBox(False, 0) 
@@ -478,18 +479,17 @@ class MainWindow(Gtk.Window):
 			if i.startswith('file://'):
 				f=unquote(i[7:])
 				if os.path.isfile(f):
-					self.files.append([f,os.path.basename(f), 0, -1,_('Not started')])
+					self.files.append([f,os.path.basename(f), 0.0, -1,_('Not started')])
 				else:
 					print "Can not add folders [%s]" % f
 			else:
 				print "Protocol not supported in [%s]" % i
-		dc.drop_finish (True, t);
 		self.addstatus(len(self.files))
 		self.options.conf['src_dir']=self.cur_src_dir
 		self.options.save_conf()
 	
 	def add_files_cb(self, *args):
-		dlg = add_dlg()
+		dlg = add_dlg(self)
 		if self.cur_src_dir:
 			dlg.set_current_folder(self.cur_src_dir)
 		if (dlg.run() == Gtk.ResponseType.ACCEPT):
@@ -968,8 +968,8 @@ class options(Gtk.Frame):
 	def modNfix(self, i,n=2): return i-(i%n)
 
 class add_dlg(Gtk.FileChooserDialog):
-	def __init__(self):
-		Gtk.FileChooserDialog.__init__(self,_("Select files to convert"),
+	def __init__(self, parent):
+		Gtk.FileChooserDialog.__init__(self,_("Select files to convert"),parent=parent,
 								buttons =(Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT, Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
 		ff=Gtk.FileFilter()
 		ff.set_name(_('All media files'))
