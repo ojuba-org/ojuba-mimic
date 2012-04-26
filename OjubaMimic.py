@@ -10,14 +10,11 @@ import os
 import random
 import signal
 import sys
-#import gobject
-#import Gtk
 import re
 import gettext
 from urllib import unquote
 from subprocess import Popen, PIPE
 from datetime import timedelta
-#import time
 
 #".ext (human readable type)", is_video, cmd, q_a,q_v, br_a,br_v, allow_audio_resample, default_ar
 # audio quality float/int, default, from , to, 
@@ -152,8 +149,6 @@ banner_list = [
 ]
 
 def info(msg, w = None):
-	if not w: 
-		w = win
 	dlg = Gtk.MessageDialog (w,
 			Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
 			Gtk.MessageType.INFO, Gtk.ButtonsType.CLOSE,
@@ -162,8 +157,6 @@ def info(msg, w = None):
 	dlg.destroy()
 
 def bad(msg,w = None):
-	if not w: 
-		w = win
 	dlg = Gtk.MessageDialog (w,
 			Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
 			Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE,
@@ -204,6 +197,7 @@ class MainWindow(Gtk.Window):
 		self.done_ls=[]
 		self.fileman=FileManager()
 		self.set_title(_('MiMiC :: Multi Media Converter'))
+		#FIXME: drag and drop.
 		#self.drag_dest_set(Gtk.DestDefaults.ALL, Gtk.TargetList.add_uri_targets(),(1<<5)-1)
 		
 		self.connect('destroy', self.quit_cb)
@@ -274,8 +268,7 @@ class MainWindow(Gtk.Window):
 		self.c_to.connect('changed', self.c_to_cb)
 		self.b_convert.connect('clicked', self.convert_cb)
 		self.b_stop.connect('clicked', self.stop_cb)
-		about_d = about_dlg()
-		b_about.connect("clicked", lambda *args: about_d.show())
+		b_about.connect("clicked", lambda *args: about_dlg(self))
 		
 		# setting the list
 		cells=[]
@@ -324,10 +317,10 @@ class MainWindow(Gtk.Window):
 		i.connect("activate", self.open_odir_cb)
 		self.popupMenu.add(i)
 		self.popupMenu.add(Gtk.SeparatorMenuItem())
-		i = Gtk.ImageMenuItem(Gtk.STOCK_REMOVE)
+		i = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_REMOVE, None)
 		i.connect("activate", self.rm_cb)
 		self.popupMenu.add(i)
-		i = Gtk.ImageMenuItem(Gtk.STOCK_CLEAR)
+		i = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_CLEAR, None)
 		i.connect("activate", self.clear_cb)
 		self.popupMenu.add(i)
 		
@@ -335,11 +328,11 @@ class MainWindow(Gtk.Window):
 		iters = self.get_Iters()
 		if event.button == 3 and len(iters) > 0:
 			self.popupMenu.show_all()
-			self.popupMenu.popup(None, self, None, 3, Gtk.get_current_event_time())
+			self.popupMenu.popup(None, self, None, None, 3, Gtk.get_current_event_time())
 			return True
 			
 	def get_Iters(self):
-		sel_model, sel_rows = self.files_list.get_selection().get_selected_rows()
+		sel_rows = self.files_list.get_selection().get_selected_rows()[1]
 		return map(lambda a: self.files.get_iter(a), sel_rows)
 		
 	def open_odir_cb(self, *args):
@@ -610,7 +603,7 @@ class MainWindow(Gtk.Window):
 	def rename_cb(self):
 		ofn=self.working_ls[0][4]=self.suggest_name(self.working_ls[0][4])
 		if not ofn:
-			i=self.files[(self.working_ls[0][2],)]; i[4]=_('Exists; Skiped');
+			i=self.files[(self.working_ls[0][2],)]; i[4]=_('Exists; Skipped');
 			self.working_ls.pop(0); return False
 		fn=self.working_ls[0][3]
 		frm = formats[self.c_to.get_model()[self.c_to.get_active()][0]]
@@ -620,7 +613,7 @@ class MainWindow(Gtk.Window):
 
 	def skiped(self):
 		i = self.files[(self.working_ls[0][2],)]
-		i[4]=_('Exists; Skiped')
+		i[4] = _('Exists; Skipped')
 		self.working_ls.pop(0)
 		return 0
 
@@ -973,7 +966,7 @@ class options(Gtk.Frame):
 		return cmd
 	
 	def modNfix(self, i,n=2): return i-(i%n)
-	 
+
 class add_dlg(Gtk.FileChooserDialog):
 	def __init__(self):
 		Gtk.FileChooserDialog.__init__(self,_("Select files to convert"),
@@ -1003,17 +996,14 @@ class add_dlg(Gtk.FileChooserDialog):
 		self.connect('response', lambda *w: self.hide())
 
 class about_dlg(Gtk.AboutDialog):
-	def __init__(self):
-		Gtk.AboutDialog.__init__(self)
+	def __init__(self, Parent):
+		Gtk.AboutDialog.__init__(self, parent = Parent)
 		self.set_default_response(Gtk.ResponseType.CLOSE)
-		self.connect('delete-event', lambda *w: self.hide())
-		self.connect('response', lambda *w: self.hide())
 		try: self.set_program_name(_("MiMiC"))
 		except AttributeError: pass
 		self.set_logo_icon_name('ojuba-mimic')
 		self.set_name(_("MiMiC"))
 		self.set_wrap_license(True)
-		#about_dlg.set_version(version)
 		self.set_copyright(_("Copyright © 2008-2012 Ojuba.org <core@ojuba.org>"))
 		self.set_comments(_("Multi Media Converter"))
 		self.set_license(_("""
@@ -1032,8 +1022,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 	"""))
 		self.set_website("http://www.ojuba.org/")
 		self.set_website_label("http://www.ojuba.org")
-		self.set_authors(["Muayyad Saleh Alsadi <alsadi@ojuba.org>", "Ehab El-Gedawy <ehabsas@gmail.com>", "Fayssal Chamekh <chamfay@gmail.com>"])
+		self.set_authors(["Muayyad Saleh Alsadi <alsadi@ojuba.org>",
+		                  "Ehab El-Gedawy <ehabsas@gmail.com>",
+		                  "Faisal Shamikh <chamfay@gmail.com>"])
 		self.connect('delete_event', self.delete)
+		self.run()
+		self.destroy()
 	
 	def delete(self, widget, data):
 		return True
