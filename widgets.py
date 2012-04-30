@@ -21,27 +21,162 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 "http://waqf.ojuba.org/license"
 
     """)
-class comboBox(Gtk.HBox):
-    def __init__(self, caption, List, connect=None):
-        Gtk.HBox.__init__(self,False,4)
-        self.List=List
+
+class spinButton(Gtk.SpinButton):
+    """
+        comboBox = Gtk.SpinButton
+            Adj              : Adjustment tuple
+            
+        Attributes:
+            None             : there is no Attributes
+        
+        Methods:
+            set_Adjustment   : set_adjustment
+            
+    """
+    __gtype_name__ = "MiMicSpinButton"
+    def __init__(self, *Adj):
+        Gtk.SpinButton.__init__(self)
+        self.set_Adjustment(*Adj)
+    
+    def set_Adjustment(self, *Adj):
+        #lo, va, up, ps, st, pa = Adj
+        adj = Gtk.Adjustment(*Adj)
+        self.set_adjustment(adj)
+        
+class hScale(Gtk.HScale):
+    """
+        comboBox = Gtk.HScale
+            Adj              : Adjustment tuple
+           
+        Attributes:
+            None             : there is no Attributes
+        
+        Methods:
+            set_Adjustment   : set_adjustment
+            
+    """
+    __gtype_name__ = "MiMicHScale"
+    def __init__(self, *Adj):
+        Gtk.HScale.__init__(self)
+        self.set_property("value-pos", Gtk.PositionType.LEFT)
+        self.set_Adjustment(*Adj)
+    
+    def set_Adjustment(self, *Adj):
+        #va, lo, up, st = Adj
+        adj = Gtk.Adjustment(*Adj)
+        self.set_adjustment(adj)
+        
+class labeldBox(Gtk.HBox):
+    """
+        labeldBox = Gtk.HBox
+            caption          : wiget title
+            widgets          : widget you may need to pack in child box
+            chk_box          : CheckBox to enable/disabl child box
+            cap_width        : title width
+            
+        Attributes:
+            childs:
+                child_hbox   : child HBox
+                chk          : CheckButton
+        
+        Methods:
+            set_active       : Change CheckButton activety, True is default
+            get_active       : Return CheckButton activety
+            
+    """
+    __gtype_name__ = "MiMicLabeldBox"
+    def __init__(self, caption, widgets = [], chk_box = False, cap_width = 200):
+        Gtk.HBox.__init__(self, False, 4)
+        if chk_box:
+            self.chk = c = Gtk.CheckButton(caption)
+            c.connect('toggled', lambda a: hb.set_sensitive(self.chk.get_active()))
+            hb = Gtk.HBox(False, 4)
+            self.pack_start(c, False, False, 4)
+            self.pack_start(hb, True, True, 2)
+            hb.set_sensitive(False)
+        else:
+            hb = self
+            c = Gtk.Label(caption, xalign = 0)
+            self.pack_start(c, False, False, 4)
+        if cap_width:
+            c.set_size_request(cap_width, -1)
+        if widgets:
+            for w in widgets:
+                stat = type(w) in [hScale, Gtk.ComboBox]
+                hb.pack_start(w, stat, stat, 4)
+   
+    def get_active(self, *w):
+        """
+            for check button
+            return get_active()
+        """
+        return self.chk.get_active()
+    
+    def set_active(self, v=True, *w):
+        """
+            for check button
+            return set_active(v)
+            v = True by default
+        """
+        return self.chk.set_active(v)
+        
+class comboBox(labeldBox):
+    """
+        comboBox = labeldBox
+            caption          : wiget title
+            List             : ComboBox List
+            callback         : fuction to connect with ComboBox
+            chk_box          : CheckBox to enable/disabl child box
+            widgets          : widget you may need to pack in child box
+            cap_width        : title width
+            
+        Attributes:
+            List             : ComboBox List
+            childs:
+                cb           : ComboBox widget
+                child_hbox   : child HBox
+                chk          : CheckButton
+        
+        Methods:
+            __connect        : To connect ComboBox with object and arges ( internal method )
+            build_list_cb    : Build ComboBox list
+            set_value        : To set ComboBox active text, or id
+            get_value        : Retrun ComboBox active text, or id
+            
+    """
+    __gtype_name__ = "MiMicComboBox"
+    def __init__(self, caption, List, callback = None, chk_box = False, widgets = [], cap_width = 200):
+        
+        self.List = List
         cb_list = Gtk.ListStore(str)
         self.cb = Gtk.ComboBox.new_with_model(cb_list)
         cell = Gtk.CellRendererText()
         self.cb.pack_start(cell, True)
         warp_width = 1
         self.cb.add_attribute(cell, 'text', 0)
-        if len(List) > 10:
-            warp_width = len(List) / 10
+        
+        if len(List) > 5:
+            warp_width = len(List) / 5
             self.cb.set_wrap_width(warp_width)
         self.build_list_cb(List)
-        self.cb.set_size_request(100,-1)
-        self.pack_start(Gtk.Label(caption),False,False,4)
-        self.pack_start(self.cb,True,True,4)
-        if connect:
-            self.cb.connect('changed', connect)
+        if widgets:
+            widgets.insert(0, self.cb)
+        else:
+            widgets = [self.cb]
+        labeldBox.__init__(self, caption, widgets, chk_box, cap_width)
+        
+        if callback:
+            self.__connect(callback)
             
+    def __connect(self, callback, *args):
+        self.cb.connect_object('changed', callback, self, *args)
+        
     def build_list_cb(self, List):
+        """
+            for combo box 
+            build module list
+        """
         self.List = List
         cb_list = self.cb.get_model()
         cb_list.clear()
@@ -49,15 +184,35 @@ class comboBox(Gtk.HBox):
           cb_list.append([i])
         self.cb.set_active(0)
         
-    def set_active(self, v):
-        try: self.cb.set_active(self.List.index(v))
-        except ValueError: pass
+    def set_value(self, v, by_id = False):
+        """
+            for combo box 
+            return set active by text
+            
+            by_id = False   : set combo box active text
+                  = True    : set combo box active id
+        """
+        if by_id:
+            return self.cb.set_active(v)
+        try:
+            self.cb.set_active(self.List.index(v))
+        except ValueError, e:
+            print e
     
-    def get_active(self):
+    def get_value(self, by_id = False):
+        """
+            for combo box
+            return active text
+            
+            by_id = False   : return combo box active text
+                  = True    : return combo box active id
+        """
+        if by_id:
+            return self.cb.get_active()
         tree_iter = self.cb.get_active_iter()
         if not tree_iter: return
         return self.cb.get_model()[tree_iter][0]
-    
+
 class add_dlg(Gtk.FileChooserDialog):
     def __init__(self, parent):
         Gtk.FileChooserDialog.__init__(self,_("Select files to convert"),
@@ -158,3 +313,7 @@ def create_combo(c, ls, w=1):
     c.set_active(0)
     return c
 
+def create_chk_combo(c, ls, w=1):
+    cb = comboBox(None, ls)
+    chk = checkBox(c, cb)
+    return chk

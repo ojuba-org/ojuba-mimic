@@ -1,4 +1,4 @@
 بسم الله الرحمن الرحيم
-- write options widgets
 - control options sensitive
-- fix all formats
+- fix all formats, and qualities
+- fix incorrect validity python eval check (Eg, MP4)

@@ -1,0 +1,40 @@
+## audio settings
+# Audio Bitrates
+self.br_a_c = comboBox
+
+# Audio Samplerate
+self.ar_r_c = comboBox
+
+# Audio Quality
+self.q_a_c = labeldBox
+self.q_a = hScale
+
+## video settings page
+# Video Bitrates widget
+self.br_v_c = comboBox
+
+# Resize widget
+self.scale_w = spinButton
+self.scale_h = spinButton
+self.scale_c = comboBox
+
+# Video Quality widget
+self.q_v = hScale
+self.q_v_c = labeldBox
+
+self.br_a_c, self.ar_r_c, self.br_v_c, self.scale_c
+398
+
+# "human readable type"
+# .ext,                                                      0
+# is_video,                                                  1
+# cmd,                                                       2
+# q_a, q_v, br_a, br_v, allow_audio_resample, default_ar     3-8
+# audio quality float/int, default, from , to,               9-12
+# video quality float/int, default, from , to,               13-16
+# audio bitrate default , from, to,                          17-19
+# video bitrate default , from, to,                          20-22
+# [disabled flag that can be turned on],                     23
+# validity python eval check,                                24
+# fauler msg                                                 25
+# 

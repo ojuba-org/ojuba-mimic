@@ -74,7 +74,7 @@ class MainWindow(Gtk.Window):
         l_banner_box.add(l_banner)
         
         ## new format 
-        self.c_to = comboBox(_('To: '), sorted(formats), self.c_to_cb)
+        self.c_to = comboBox(_('To:'), sorted(formats), self.c_to_cb, cap_width = 0)
         
         # TODO: add axel 
         b_add = Gtk.Button(stock = Gtk.STOCK_ADD)
@@ -172,6 +172,8 @@ class MainWindow(Gtk.Window):
         
         GObject.timeout_add(250, self.progress_cb)
         self.show_all()
+        ## to set current quality
+        self.c_to_cb(self.c_to)
 
     def active_controlls(self, v=False):
         self.b_stop.set_sensitive(v)
@@ -383,37 +385,59 @@ class MainWindow(Gtk.Window):
                              )
         
     def c_to_cb(self, c,*args):
-        #frm=formats[c.get_active()]
-        frm = formats[self.c_to.get_active()]
-        for i,j,k in ((frm[3],self.options.q_a_c,self.options.q_a),
-                      (frm[4],self.options.q_v_c,self.options.q_v),
-                      (frm[5],self.options.br_a_c,self.options.br_a),
-                      (frm[6],self.options.br_v_c,self.options.br_v)):
-            j.set_sensitive(i)
+        """
+            Destination format combo box callback
+        """
+        frm = formats[self.c_to.get_value()]
+        ## Disable/Enable video settings widget
+        for i in (self.options.br_v_c,  # Video Bitrates widget
+                  self.options.scale_c, # Video Resize widget
+                  self.options.q_v_c):  # Video Quality widget
+            i.set_active(False)
+            i.set_sensitive(frm[1])
+        ## set check box activity
+        for i,j in ((frm[3],self.options.q_a_c),     # Audio Quality widget
+                      (frm[4],self.options.q_v_c),   # Video Quality widget
+                      (frm[5],self.options.br_a_c),  # Audio Bitrates widget
+                      (frm[6],self.options.br_v_c)): # Video Bitrates widget
+            j.set_active(i)
             if not i:
-                k.set_sensitive(False)
                 j.set_active(False)
-        self.options.hb_ar.set_sensitive(frm[7])
-        if not frm[7]:
-            self.options.ar_c.set_active(False)
-        self.options.ar_r.set_active(map(lambda i: i[0],self.options.ar_r.get_model()).index(str(frm[8])))
-        
-        adj = Gtk.Adjustment(frm[10], frm[11], frm[12], 10, 1, 0)
-        self.options.q_a.set_adjustment(adj)
-        
-        adj = Gtk.Adjustment(frm[14], frm[15], frm[16], 10, 1, 0)
-        self.options.q_v.set_adjustment(adj)
-        
-        adj = Gtk.Adjustment(frm[17],frm[18],frm[19],50, 100, 0)
-        self.options.br_a.set_adjustment(adj)
-        adj = Gtk.Adjustment(frm[20],frm[21],frm[22],50, 100, 0)
-        self.options.br_v.set_adjustment(adj)
+        ## set Audio Samplerate
+        self.options.ar_r_c.set_sensitive(frm[7])
+        self.options.ar_r_c.set_active(frm[7])
+        self.options.ar_r_c.set_value(str(frm[8]))
+        # Audio Quality scal wdget
+        adj = (frm[10], frm[11], frm[12], 1)
+        self.options.q_a.set_Adjustment(*adj)
+        self.options.q_a_c.set_sensitive(int(self.options.q_a.get_value()))
+        # Video Quality scal wdget
+        adj = (frm[14], frm[15], frm[16], 1)
+        self.options.q_v.set_Adjustment(*adj)
+        self.options.q_v_c.set_sensitive(int(self.options.q_v.get_value()))
+        # Audio Bitrates value
+        val = frm[17]/1000
+        self.options.br_a_c.set_value('{}k'.format(val))
+        # Video Bitrates value
+        self.options.br_v_c.set_value(str(frm[20]))
 
+        ## set quality
+        q = self.options.quality_l.get_value(True)
+        quality = frm[-1][q]
+        for i, k in enumerate((self.options.br_a_c,
+                              self.options.ar_r_c,
+                              self.options.br_v_c,
+                              self.options.scale_c)):
+            s, b = str(quality[i]), bool(quality[i])
+            if b:
+                k.set_value(s)
+                k.set_active(b)
+        
     def convert_cb(self, *args):
         self.active_controlls(True)
-        frm = formats[self.c_to.get_active()]
+        frm = formats[self.c_to.get_value()]
         cmd = self.options.build_cmd(frm, self)
-        if not cmd: 
+        if not cmd:
             return
         if self.options.dst_o2.get_active(): 
             oodir=self.options.dst_b.get_filename();
@@ -490,7 +514,7 @@ class MainWindow(Gtk.Window):
             i=self.files[(self.working_ls[0][2],)]; i[4]=_('Exists; Skipped');
             self.working_ls.pop(0); return False
         fn=self.working_ls[0][3]
-        frm = formats[self.c_to.get_active()]
+        frm = formats[self.c_to.get_value()]
         cmd=self.options.build_cmd(frm, self)
         self.working_ls[0][1]=self.cmd_to_list(fn,ofn,cmd)
         return True
@@ -508,6 +532,155 @@ class MainWindow(Gtk.Window):
         Gtk.main_quit()
         
 class options(Gtk.Notebook):
+    """
+    """
+    def __init__(self, win):
+        Gtk.Notebook.__init__(self)
+        self.cw_Stop = False
+        self.win = win
+        self.conf = {}
+        self.scale_dict = {}
+        for i in filter(lambda a: a != _("custom"),scale_ls):
+            a = i.split(' ')
+            self.scale_dict[a[1]] = i
+            
+        ## quality page
+        self.quality_l = q = comboBox(_("Quality:"),
+                                      [_("Low"), _("Normal"), _("High")],
+                                      self.set_options_cb,
+                                      cap_width = 100)
+        ## create page and pack widgets ( page 1 )
+        ##########################################
+        self.create_page(_("Quality"), q)
+        ##########################################
+        
+        ## save options page
+        # dst widgets
+        self.dst_o1 = o1 = Gtk.RadioButton.new_with_label_from_widget(None,_("same as source"))
+        self.dst_o2 = o2 = Gtk.RadioButton.new_with_label_from_widget(self.dst_o1, _("fixed"))
+        self.dst_b = b = Gtk.FileChooserButton(_("Select destination folder"))
+        self.dst_b.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
+        dst_l = labeldBox(_("Save destination as:"), [o1, o2, b])
+        # ifexist widgets
+        self.x_o1 = o1 =Gtk.RadioButton.new_with_label_from_widget(None,_("Skip"))
+        self.x_o2 = o2 =Gtk.RadioButton.new_with_label_from_widget(self.x_o1,_("Overwrite"))
+        self.x_o3 = o3 =Gtk.RadioButton.new_with_label_from_widget(self.x_o1,_("Rename"))
+        self.x_o3.set_active(True)
+        x_l = labeldBox(_("If destination exists:"), [o1, o2, o3])
+        ## create page and pack widgets ( page 2 )
+        ##########################################
+        self.create_page(_('Save'), dst_l, x_l)
+        ##########################################
+        
+        ## audio settings page
+        # Audio Bitrates widget
+        ls = map(lambda i: str(i)+'k', list(range(8,17,8))+list(range(32,257,32)))
+        self.br_a_c = comboBox(_("Audio Bitrates:"), ls, chk_box = True)
+        
+        # Audio Samplerate widget
+        ls = map(lambda i: str(i), list(range(11025,48101,11025)+list(range(8000,48001,8000))) )
+        self.ar_r_c = comboBox(_("Audio Samplerate:"), ls, chk_box = True)
+        
+        # Audio Quality widget
+        adj = (3, 0, 10, 1)
+        self.q_a = hScale(*adj)
+        self.q_a_c = labeldBox(_("Audio Quality:"), [self.q_a], True)
+        ## create page and pack widgets ( page 3 )
+        ##########################################
+        self.create_page(_('Audio'), self.br_a_c, self.ar_r_c, self.q_a_c)
+        ##########################################
+        
+        ## video settings page
+        # Video Bitrates widget
+        ls = map(lambda i: str(i), list(range(200, 10001, 250)))
+        self.br_v_c = comboBox(_("Video Bitrates:"), ls, chk_box = True)
+        
+        # Resize widget
+        adj = (0, 0, 10000, 1, 10, 0)
+        self.scale_w = spinButton(*adj)
+        self.scale_h = spinButton(*adj)
+        self.scale_c = comboBox(_("Resize:"),  # caption
+                                scale_ls,      # list
+                                self.scale_cb, # callback
+                                True,          # with check button ?
+                                # extra widgets
+                                [self.scale_w, Gtk.Label("x"), self.scale_h]
+                               )
+        # Video Quality widget
+        adj = (10, 0, 100,0)
+        self.q_v = hScale(*adj)
+        self.q_v_c = labeldBox(_("Video Quality:"), [self.q_v], True)
+        ## create page and pack widgets ( page 4 )
+        ##########################################
+        self.create_page(_("Video"), self.br_v_c, self.scale_c, self.q_v_c)
+        ##########################################
+        
+        ## advanced settings page
+        # Corp widgets
+        adj = (0, 0, 10000, 2, 10, 0)
+        crp_ly1 = Gtk.Label(_("Top"))
+        self.crp_dy1 = spinButton(*adj)
+        
+        crp_ly2 = Gtk.Label(_("Bottom"))
+        self.crp_dy2 = spinButton(*adj)
+        
+        crp_lx1 = Gtk.Label(_("Left"))
+        self.crp_dx1 = spinButton(*adj)
+        
+        crp_lx2 = Gtk.Label(_("Right"))
+        self.crp_dx2 = spinButton(*adj)
+        
+        w = [crp_ly1, self.crp_dy1, crp_ly2, self.crp_dy2,
+             crp_lx1, self.crp_dx1, crp_lx2, self.crp_dx2]
+        self.crp_c = labeldBox(_("Crop"), w, True)
+
+        # Pad widgets
+        self.pad_c = Gtk.CheckButton(_("Pad"))
+
+        pad_ly1 = Gtk.Label(_("Top"))
+        self.pad_dy1 = spinButton(*adj)
+        
+        pad_ly2 = Gtk.Label(_("Bottom"))
+        self.pad_dy2 = spinButton(*adj)
+        
+        pad_lx1 = Gtk.Label(_("Left"))
+        self.pad_dx1 = spinButton(*adj)
+        
+        pad_lx2 = Gtk.Label(_("Right"))
+        self.pad_dx2 = spinButton(*adj)
+        
+        w = [pad_ly1, self.pad_dy1, pad_ly2, self.pad_dy2,
+             pad_lx1, self.pad_dx1, pad_lx2, self.pad_dx2]
+        self.pad_c = labeldBox(_("Pad"), w, True)
+        ## create page and pack widgets ( page 5 )
+        ##########################################
+        self.create_page(_("Advanced"), self.crp_c, self.pad_c)
+        ##########################################
+        
+        self.apply_conf()
+        
+        ## apply calbacks
+        # FIXME: comment out evry line !
+        # TODO: set callbaks via classes
+         
+        self.dst_o2.connect('toggled', self.save_conf)
+        self.x_o1.connect('toggled', self.save_conf)
+        self.x_o2.connect('toggled', self.save_conf)
+        self.dst_b.connect('file-set', self.save_conf)
+        #self.dst_b.connect('current-folder-changed', self.save_conf)
+        self.scale_w.connect('changed', self.scale_wh_cb,self.scale_w,self.scale_h,self.scale_c)
+        self.scale_h.connect('changed', self.scale_wh_cb,self.scale_w,self.scale_h,self.scale_c)
+        self.scale_w.connect('activate', self.scale_wh_cb,self.scale_w,self.scale_h,self.scale_c)
+        self.scale_h.connect('activate', self.scale_wh_cb,self.scale_w,self.scale_h,self.scale_c)    
+        self.scale_w.connect_after('focus-out-event', lambda a,*args: a.activate() and False)
+        self.scale_h.connect_after('focus-out-event', lambda a,*args: a.activate() and False)
+        self.dst_b.set_sensitive(self.dst_o2.get_active())
+        self.scale_c.set_value("qvga 320x240")
+        self.quality_l.set_value(1, True)
+        
+    def set_options_cb(self, c):
+        c.cb.connect_object('changed', self.win.c_to_cb, self.win.c_to)
+  
     def create_page(self, label, *widgets):
         vb=Gtk.VBox()
         vb.set_border_width(6)
@@ -517,212 +690,6 @@ class options(Gtk.Notebook):
             for w in widgets:
                 vb.pack_start(w,False, False, 2)
         return vb
-        
-    def __init__(self, win):
-        Gtk.Notebook.__init__(self)
-        self.win = win
-        self.conf = {}
-        
-        ## quality page
-        self.quality_l = q = comboBox(_('Quality:'), ['Low', 'Normal', 'High'], self.set_options_cb)
-        vb = self.create_page(_('Convert Quality'), q)
-        
-        ## save options page
-        vb = self.create_page(_('Save'))
-        
-        dst_l = Gtk.Label(_('Save destination: '))
-        self.dst_o1 = Gtk.RadioButton.new_with_label_from_widget(None,_("same as source"))
-        self.dst_o2 = Gtk.RadioButton.new_with_label_from_widget(self.dst_o1, _("fixed"))
-        self.dst_b = Gtk.FileChooserButton(_("Select destination folder"))
-        self.dst_b.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
-
-        x_l=Gtk.Label(_("If exists: "))
-        self.x_o1=Gtk.RadioButton.new_with_label_from_widget(None,_("Skip"))
-        self.x_o2=Gtk.RadioButton.new_with_label_from_widget(self.x_o1,_("Overwrite"))
-        self.x_o3=Gtk.RadioButton.new_with_label_from_widget(self.x_o1,_("Rename"))
-        
-        ## pack dst widgets
-        hb = Gtk.HBox(False,6)
-        vb.pack_start(hb,False, False, 2)
-        for i in (Gtk.Label(' '),dst_l,self.dst_o1,self.dst_o2,self.dst_b):
-            hb.pack_start(i,False, False, 2)
-        ## pack if exist widgets
-        hb = Gtk.HBox(False,6)
-        vb.pack_start(hb,False, False, 2)
-        for i in (Gtk.Label(' '),x_l,self.x_o1,self.x_o2,self.x_o3):
-            hb.pack_start(i,False, False, 2)
-
-        ## audio settings page
-        hb1 = Gtk.HBox(False,6)
-        hb2 = Gtk.HBox(False,6)
-        hb3 = Gtk.HBox(False,6)
-        vb = self.create_page(_('Audio'), hb1, hb2, hb3)
-        
-        self.br_a_c=Gtk.CheckButton(_("Audio Bitrates"))
-        adj = Gtk.Adjustment(320000, 8000, 10000000, 50, 100, 0)
-        self.br_a=Gtk.SpinButton()
-        self.br_a.set_adjustment(adj)
-        br_a_l=Gtk.Label(_("bit/s"))
-        
-        self.q_a_c=Gtk.CheckButton(_("Audio Quality"))
-        adj = Gtk.Adjustment(3, 0, 10, 1)
-        self.q_a=Gtk.HScale()
-        self.q_a.set_adjustment(adj)
-        self.q_a.set_property("value-pos", Gtk.PositionType.LEFT)
-        
-        self.ar_c=Gtk.CheckButton(_("Audio Samplerate"))
-        self.ar_r = create_combo(Gtk.ComboBoxText(),
-                                 map(lambda i: str(i),
-                                 list(range(11025,48101,11025)+list(range(8000,48001,8000))) ),2)
-                                 
-        for i in (self.br_a_c, self.br_a, br_a_l):
-            hb1.pack_start(i, False, False, 3)
-        for i in (self.ar_c, self.ar_r):
-            hb2.pack_start(i, False, False, 3)
-        for i in (self.q_a_c, self.q_a):
-            hb3.pack_start(i, type(i)==Gtk.HScale, type(i)==Gtk.HScale, 3)
-        
-        ## video settings page
-        hb1 = Gtk.HBox(False,6)
-        hb2 = Gtk.HBox(False,6)
-        hb3 = Gtk.HBox(False,6)
-        scale_hb = Gtk.HBox(False,6)
-        vb = self.create_page(_('Video'), hb1, hb2, hb3)
-        
-        self.br_v_c=Gtk.CheckButton(_("Video Bitrates"))
-        adj = Gtk.Adjustment(100000, 8000, 10000000, 50, 100, 0)
-        self.br_v=Gtk.SpinButton()
-        self.br_v.set_adjustment(adj)
-        br_v_l=Gtk.Label(_("bit/s"));
-        
-        self.scale_dict={}
-        for i in filter(lambda a: a!=_("custom"),scale_ls):
-            a = i.split(' ')
-            self.scale_dict[a[1]]=i
-        
-        self.scale_c=Gtk.CheckButton(_("Resize"))
-        self.scale_l=create_combo(Gtk.ComboBoxText(), scale_ls,2)
-        adj = Gtk.Adjustment(0, 0, 10000, 1, 10, 0)
-        self.scale_w=Gtk.SpinButton()
-        self.scale_w.set_adjustment(adj)
-        self.scale_x=Gtk.Label("x");
-        
-        self.q_v_c=Gtk.CheckButton(_("Video Quality"))
-        adj = Gtk.Adjustment(10, 0, 100,0)
-        self.q_v=Gtk.HScale()
-        self.q_v.set_adjustment(adj)
-        self.q_v.set_property("value-pos",Gtk.PositionType.LEFT)
-        
-        adj = Gtk.Adjustment(0, 0, 10000, 1, 10, 0)
-        self.scale_h=Gtk.SpinButton()
-        self.scale_h.set_adjustment(adj)
-        cs_vb=Gtk.VBox(False, 0)
-        c_hb = Gtk.HBox(False, 0)
-        
-        for i in (self.br_v_c, self.br_v, br_v_l):
-            hb1.pack_start(i,False, False, 2)
-        for i in (self.scale_l, self.scale_w, self.scale_x, self.scale_h):
-            scale_hb.pack_start(i,type(i)==Gtk.HScale, type(i)==Gtk.HScale, 2)
-        for i in (self.scale_c, scale_hb):
-            hb2.pack_start(i,type(i)==Gtk.HScale, type(i)==Gtk.HScale, 2)
-        for i in (self.q_v_c,self.q_v):
-            hb3.pack_start(i,type(i)==Gtk.HScale, type(i)==Gtk.HScale, 2)
-
-        ## advanced settings page
-        c_vb = self.create_page(_('Advanced'))
-        self.crp_c = Gtk.CheckButton(_("Crop"))
-        crp_hb = Gtk.HBox(False,0);
-        crp_hb.set_spacing(4)
-        
-        adj = Gtk.Adjustment(0, 0, 10000, 2, 10, 0)
-        crp_ly1 = Gtk.Label(_("Top"))
-        self.crp_dy1 = Gtk.SpinButton()
-        self.crp_dy1.set_adjustment(adj)
-        
-        adj = Gtk.Adjustment(0, 0, 10000, 2, 10, 0)
-        crp_ly2=Gtk.Label(_("Bottom"))
-        self.crp_dy2 = Gtk.SpinButton()
-        self.crp_dy2.set_adjustment(adj)
-        
-        adj = Gtk.Adjustment(0, 0, 10000, 2, 10, 0)
-        crp_lx1=Gtk.Label(_("Left"))
-        self.crp_dx1=Gtk.SpinButton()
-        self.crp_dx1.set_adjustment(adj)
-        
-        adj = Gtk.Adjustment(0, 0, 10000, 2, 10, 0)
-        crp_lx2=Gtk.Label(_("Right"))
-        self.crp_dx2=Gtk.SpinButton()
-        self.crp_dx2.set_adjustment(adj)
-
-        self.pad_c=Gtk.CheckButton(_("Pad"))
-        pad_hb=Gtk.HBox(False,0)
-        pad_ly1=Gtk.Label(_("Top"))
-        adj = Gtk.Adjustment(0, 0, 10000, 1, 10, 0)
-        self.pad_dy1=Gtk.SpinButton()
-        self.pad_dy1.set_adjustment(adj)
-        
-        adj = Gtk.Adjustment(0, 0, 10000, 1, 10, 0)
-        pad_ly2=Gtk.Label(_("Bottom"))
-        self.pad_dy2=Gtk.SpinButton()
-        self.pad_dy2.set_adjustment(adj)
-        
-        adj = Gtk.Adjustment(0, 0, 10000, 1, 10, 0)
-        pad_lx1 = Gtk.Label(_("Left"))
-        self.pad_dx1 = Gtk.SpinButton()
-        self.pad_dx1.set_adjustment(adj)
-        
-        adj = Gtk.Adjustment(0, 0, 10000, 1, 10, 0)
-        pad_lx2=Gtk.Label(_("Right"))
-        self.pad_dx2=Gtk.SpinButton()
-        self.pad_dx2.set_adjustment(adj)
-
-
-        hb = Gtk.HBox(False,0)
-        c_vb.pack_start(hb,False, False, 2)
-        hb.pack_start(self.crp_c,False, False, 2)
-        hb.pack_start(crp_hb,True, True, 2)
-        for i in (crp_ly1,self.crp_dy1,crp_ly2,self.crp_dy2,crp_lx1,
-                  self.crp_dx1,crp_lx2,self.crp_dx2):
-            crp_hb.pack_start(i, False, False, 2)
-
-        hb=Gtk.HBox(False,0)
-        c_vb.pack_start(hb,False, False, 2)
-        hb.pack_start(self.pad_c,False, False, 2)
-        hb.pack_start(pad_hb,True, True, 2)
-        for i in (pad_ly1,self.pad_dy1,pad_ly2,self.pad_dy2,
-                  pad_lx1,self.pad_dx1,pad_lx2,self.pad_dx2):
-            pad_hb.pack_start(i,False, False, 2)
-
-        self.hb_ar=Gtk.HBox(False,0)
-        c_vb.pack_start(self.hb_ar,False, False, 2)
-
-        
-        self.x_o3.set_active(True)
-        self.apply_conf()
-        
-        self.dst_o2.connect('toggled', self.save_conf)
-        self.x_o1.connect('toggled', self.save_conf)
-        self.x_o2.connect('toggled', self.save_conf)
-        self.dst_b.connect('file-set', self.save_conf)
-        #self.dst_b.connect('current-folder-changed', self.save_conf)
-        for i,j in ((self.crp_c,crp_hb),(self.pad_c,pad_hb),
-                    (self.scale_c,scale_hb),(self.br_a_c,self.br_a),
-                    (self.br_v_c,self.br_v),(self.q_a_c,self.q_a),
-                    (self.q_v_c,self.q_v),(self.ar_c,self.ar_r)):
-            i.connect('toggled', lambda i,j: j.set_sensitive(i.get_active()),j)
-            i.set_active(False); j.set_sensitive(False)
-        self.scale_l.connect('changed', self.scale_cb,self.scale_w,self.scale_h)
-        self.scale_w.connect('changed', self.scale_wh_cb,self.scale_w,self.scale_h,self.scale_l)
-        self.scale_h.connect('changed', self.scale_wh_cb,self.scale_w,self.scale_h,self.scale_l)
-        self.scale_w.connect('activate', self.scale_wh_cb,self.scale_w,self.scale_h,self.scale_l)
-        self.scale_h.connect('activate', self.scale_wh_cb,self.scale_w,self.scale_h,self.scale_l)    
-        self.scale_w.connect_after('focus-out-event', lambda a,*args: a.activate() and False)
-        self.scale_h.connect_after('focus-out-event', lambda a,*args: a.activate() and False)
-        self.dst_b.set_sensitive(self.dst_o2.get_active())
-        self.scale_l.set_active(scale_ls.index("qvga 320x240"))
-        
-    def set_options_cb(self, c):
-        print c.get_active()
         
     def apply_conf(self):
         self.load_conf()
@@ -778,22 +745,27 @@ class options(Gtk.Notebook):
         try: open(fn,'wt').write(s)
         except OSError: pass
         
-    def scale_cb(self, c,w,h):
-        s=c.get_model()[c.get_active()][0]
-        if s==_("custom"): return
+    def scale_cb(self, c, *args):
+        s = self.scale_c.get_value()
+        if s == _("custom"):
+            return
         n,r = s.split(' ')
         W,H = r.split('x')
-        w.set_value(float(W))
-        h.set_value(float(H));
-
+        self.cw_Stop = True
+        self.scale_w.set_value(float(W))
+        self.scale_h.set_value(float(H))
+        self.cw_Stop = False
+        
+        
     def scale_wh_cb(self, m,w,h,l):
-        scale_dict=self.scale_dict
-        W=w.get_value()
-        H=h.get_value()
-        S='%dx%d' % (W,H)
-        if S not in scale_dict: l.set_active(scale_ls.index(_("custom")))
-        elif scale_dict[S]!=l.get_model()[l.get_active()][0]:
-            l.set_active(scale_ls.index(scale_dict[S]))
+        if self.cw_Stop: return
+        scale_dict = self.scale_dict
+        W = w.get_value()
+        H = h.get_value()
+        S = '%dx%d' % (W,H)
+        if S not in scale_dict: l.set_value(_("custom"))
+        elif scale_dict[S] != l.get_value():
+            l.set_value(scale_dict[S])
 
     def build_cmd(self, frm, win=None):
         ext = frm[0] #.split(' ')[0]
@@ -843,23 +815,27 @@ class options(Gtk.Notebook):
             opts['video_quality']=(('-qscale %d','-qscale %g')[frm[13]==float] ) % frm[13](self.q_v.get_value())
         else: opts['video_quality']=''
         if self.br_a_c.get_active():
-            opts['audio_bitrate']=self.br_a.get_value()
-            opts['br_a']='-ab %d' % self.br_a.get_value()
+            opts['audio_bitrate']=self.br_a_c.get_value()
+            opts['br_a']='-ab %s' % self.br_a_c.get_value()
         else: opts['br_a']=opts['audio_bitrate']=''
         if self.br_v_c.get_active():
-            opts['video_bitrate']=self.br_v.get_value()
-            opts['br_v']='-b %dK' % self.br_v.get_value()
+            opts['video_bitrate']=self.br_v_c.get_value()
+            opts['br_v']='-b %dk' % int(self.br_v_c.get_value())
         else: opts['br_v']=opts['video_bitrate']=''
-        if self.ar_c.get_active():
-            opts['audio_samplerate']=int(self.ar_r.get_model()[self.ar_r.get_active()][0])
-            opts['ar']='-ar %d' % opts['audio_samplerate']
+        if self.ar_r_c.get_active():
+            opts['audio_samplerate']=int(self.ar_r_c.get_value())
+            opts['ar']='-ar %s' % opts['audio_samplerate']
         else: opts['ar']=opts['audio_samplerate']=''
         if not frm[1]:
             opts['size']=''
             opts['br_v']=''
             opts['q_v']=''
-
-        if not eval(frm[24],opts): error(frm[25], win); return None
+        o = frm[24]
+        try:
+            if not eval(frm[24],opts):
+                error(frm[25], win); return None
+        except TypeError:
+            error(_("Error: Validity python eval check faild") , win); return None
         cmd=' '.join((frm[2] % opts,opts['ar'],opts['br_a'],opts['br_v'],opts['crop'],opts['size'],opts['pad']))
         return cmd
     
