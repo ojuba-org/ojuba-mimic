@@ -54,7 +54,7 @@ class MainWindow(Gtk.Window):
         self.connect('drag-data-received',self.drop_data_cb)
         
         ## main container
-        vb = Gtk.VBox(False, 0) 
+        vb = Gtk.VBox()
         self.add(vb)
         
         ## banner box
@@ -65,7 +65,7 @@ class MainWindow(Gtk.Window):
         # Gtk.StateType.PRELIGHT, Gtk.StateType.SELECTED, 
         # Gtk.StateType.INSENSITIVE)
         for i in range(0,5):
-            l_banner_box.modify_bg(Gtk.StateType(i), Gdk.color_parse("#fffff8"))
+            l_banner_box.modify_bg(Gtk.StateType(i), Gdk.color_parse("#fffff8")[1])
         l_banner=Gtk.Label()
         l_banner.set_justify(Gtk.Justification.CENTER)
         l_banner.set_markup('''<span face="Simplified Naskh" color="#2040FF" 
@@ -90,15 +90,15 @@ class MainWindow(Gtk.Window):
         b_about = Gtk.Button(stock = Gtk.STOCK_ABOUT)
         b_about.connect("clicked", lambda *args: about_dlg(self))
 
-        self.tools_hb = d_hb = Gtk.HBox(False,0)
-        self.ctoools_hb = Gtk.HBox(False,0)
+        self.tools_hb = d_hb = Gtk.HBox()
+        self.ctoools_hb = Gtk.HBox()
         ## pack toolbar tools
         for i in (b_rm, b_clear, Gtk.VSeparator(), self.c_to):
             self.ctoools_hb.pack_start(i,False, False, 2)
         for i in (b_add, Gtk.VSeparator(),self.ctoools_hb):
             d_hb.pack_start(i,False, False, 2)
             d_hb.set_spacing(4)
-        hb = Gtk.HBox(False,0); vb.pack_start(hb,False, False, 0)
+        hb = Gtk.HBox(); vb.pack_start(hb,False, False, 0)
         for i in (d_hb,self.b_convert,self.b_stop,b_about):
             hb.pack_start(i,False, False, 2)
             hb.set_spacing(4)
@@ -111,7 +111,8 @@ class MainWindow(Gtk.Window):
         ## files tree
         # fn, os.path.basename, percent, pulse, label
         self.files = Gtk.ListStore(str, str, float, int, str) 
-        self.files_list = Gtk.TreeView(self.files)
+        self.files_list = Gtk.TreeView()
+        self.files_list.set_model(self.files)
         self.files_list.set_size_request(-1, 350)
         self.files_list.get_selection().set_mode(Gtk.SelectionMode.MULTIPLE)
         scroll.add(self.files_list)
@@ -147,10 +148,10 @@ class MainWindow(Gtk.Window):
             self.cur_src_dir = self.options.conf['src_dir']
         expander = Gtk.Expander(label = _('Options'))
         expander.add(self.options)
-        expander.set_resize_toplevel(True)
+        #expander.set_resize_toplevel(True)
         vb.pack_start(expander, False, False,0)
         
-        s_hb = Gtk.HBox(False,0); vb.pack_start(s_hb,False, False, 0)
+        s_hb = Gtk.HBox(); vb.pack_start(s_hb,False, False, 0)
         self.status_bar = s = Gtk.Statusbar()
 
         s_hb.pack_start(s, True,True,2)
@@ -184,7 +185,8 @@ class MainWindow(Gtk.Window):
         self.popupMenu.get_children()[3].set_sensitive(not v)
         
     def build_popup_Menu(self):
-        i = Gtk.MenuItem(_("Open output folder"))
+        i = Gtk.MenuItem()
+        i.set_label(_("Open output folder"))
         i.connect("activate", self.open_odir_cb)
         self.popupMenu.add(i)
         self.popupMenu.add(Gtk.SeparatorMenuItem())
@@ -558,7 +560,8 @@ class options(Gtk.Notebook):
         # dst widgets
         self.dst_o1 = o1 = Gtk.RadioButton.new_with_label_from_widget(None,_("same as source"))
         self.dst_o2 = o2 = Gtk.RadioButton.new_with_label_from_widget(self.dst_o1, _("fixed"))
-        self.dst_b = b = Gtk.FileChooserButton(_("Select destination folder"))
+        self.dst_b = b = Gtk.FileChooserButton()
+        b.set_title(_("Select destination folder"))
         self.dst_b.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
         dst_l = labeldBox(_("Save destination as:"), [o1, o2, b])
         # ifexist widgets

@@ -87,11 +87,11 @@ class labeldBox(Gtk.HBox):
     """
     __gtype_name__ = "MiMicLabeldBox"
     def __init__(self, caption, widgets = [], chk_box = False, cap_width = 200):
-        Gtk.HBox.__init__(self, False, 4)
+        Gtk.HBox.__init__(self)
         if chk_box:
             self.chk = c = Gtk.CheckButton(caption)
             c.connect('toggled', lambda a: hb.set_sensitive(self.chk.get_active()))
-            hb = Gtk.HBox(False, 4)
+            hb = Gtk.HBox()
             self.pack_start(c, False, False, 4)
             self.pack_start(hb, True, True, 2)
             hb.set_sensitive(False)
