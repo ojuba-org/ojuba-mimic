@@ -2,3 +2,5 @@
 - control options sensitive
 - fix all formats, and qualities
 - fix incorrect validity python eval check (Eg, MP4)
+- more code documentation and improvements
+

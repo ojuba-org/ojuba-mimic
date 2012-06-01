@@ -10,8 +10,8 @@ Group: Applications/Multimedia
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: python, ImageMagick
-Requires: python, pygtk2, ffmpeg
-
+Requires: python, ffmpeg
+Requires:   pygobject3 >= 3.0.2
 # %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 
 %description
@@ -45,8 +45,8 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %doc LICENSE-en LICENSE-ar.txt
 %{_bindir}/%{name}
-%{python_sitelib}/OjubaMimic*
-%{python_sitelib}/*.egg-info
+%{python_sitelib}/*
+# %{python_sitelib}/*.egg-info
 %{_datadir}/icons/hicolor/*/apps/*.png
 %{_datadir}/icons/hicolor/*/apps/*.svg
 %{_datadir}/applications/*.desktop
