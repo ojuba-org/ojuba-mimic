@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ojuba-mimic 0.1.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-07-28 23:29+0300\n"
+"POT-Creation-Date: 2012-06-02 22:12+0200\n"
 "PO-Revision-Date: 2011-07-23 17:44+0300\n"
 "Last-Translator: يوسف صلاح الدين\n"
 "Language-Team: Muayyad Alsadi <LL@li.org>\n"
@@ -24,265 +24,271 @@ msgstr "محول وسائط أعجوبة"
 msgid "Ojuba Multi Media Conveter"
 msgstr "محول وسائط أعجوبة"
 
-#: ../OjubaMimic.py:43
-msgid "choose a valid size and bitrate (try cif and 4750)"
+#: ../OjubaMimic/OjubaMimic.py:46
+msgid "MiMiC :: Multi Media Converter"
+msgstr "محول وسائط أعجوبة :: MiMiC"
+
+#. # new format
+#: ../OjubaMimic/OjubaMimic.py:79
+msgid "To:"
+msgstr "إلى :"
+
+#: ../OjubaMimic/OjubaMimic.py:127
+msgid "Files"
+msgstr "الملفات"
+
+#: ../OjubaMimic/OjubaMimic.py:132
+msgid "Status"
+msgstr "الحالة"
+
+#: ../OjubaMimic/OjubaMimic.py:150
+msgid "Options"
+msgstr "الخيارات"
+
+#: ../OjubaMimic/OjubaMimic.py:160
+msgid "Add files, Then click Convert!"
+msgstr "أضف الملفات ، ثم إنقر تحويل ..."
+
+#: ../OjubaMimic/OjubaMimic.py:189
+msgid "Open output folder"
+msgstr "فتح المجلد متضمن الناتج"
+
+#: ../OjubaMimic/OjubaMimic.py:235
+msgid "File/Files removed"
+msgstr "ملف/ملفات أزيلت"
+
+#: ../OjubaMimic/OjubaMimic.py:261
+msgid "Done"
+msgstr "تم"
+
+#: ../OjubaMimic/OjubaMimic.py:269
+msgid "Error"
+msgstr "خطأ"
+
+#: ../OjubaMimic/OjubaMimic.py:277
+msgid "Finished:"
+msgstr "مكتملة:"
+
+#: ../OjubaMimic/OjubaMimic.py:282
+msgid "Converting:"
+msgstr "يجري التحويل:"
+
+#: ../OjubaMimic/OjubaMimic.py:286
+msgid "file/files of"
+msgstr "ملف/ملفات من"
+
+#: ../OjubaMimic/OjubaMimic.py:286
+msgid "Compleated"
+msgstr "مكتمل"
+
+#: ../OjubaMimic/OjubaMimic.py:351
+msgid "Converting ..."
+msgstr "يجري التحويل..."
+
+#: ../OjubaMimic/OjubaMimic.py:360 ../OjubaMimic/OjubaMimic.py:375
+msgid "Not started"
+msgstr "لم يبدأ"
+
+#: ../OjubaMimic/OjubaMimic.py:384
+msgid "Click Convert, to start converting"
+msgstr "انقر تحويل, لبدء تحويل"
+
+#: ../OjubaMimic/OjubaMimic.py:386
+msgid "file/files"
+msgstr "ملف/ملفات"
+
+#: ../OjubaMimic/OjubaMimic.py:486
+msgid "Stoped:"
+msgstr "متوقف:"
+
+#: ../OjubaMimic/OjubaMimic.py:493
+msgid "Canceled"
+msgstr "ملغى"
+
+#: ../OjubaMimic/OjubaMimic.py:516 ../OjubaMimic/OjubaMimic.py:526
+msgid "Exists; Skipped"
+msgstr "موجود: تخطي"
+
+#: ../OjubaMimic/OjubaMimic.py:532
+msgid "There are corrently running oprations, Stop it?"
+msgstr "هناك عمليات جارية، هل ترغب في توقيفها ؟"
+
+#: ../OjubaMimic/OjubaMimic.py:545 ../OjubaMimic/OjubaMimic.py:752
+#: ../OjubaMimic/OjubaMimic.py:768 ../OjubaMimic/utils.py:24
+msgid "custom"
+msgstr "مخصص"
+
+#. # quality page
+#: ../OjubaMimic/OjubaMimic.py:550
+msgid "Quality:"
+msgstr "الجودة :"
+
+#: ../OjubaMimic/OjubaMimic.py:551
+msgid "Low"
+msgstr "منخفضة"
+
+#: ../OjubaMimic/OjubaMimic.py:551
+msgid "Normal"
+msgstr "عادية"
+
+#: ../OjubaMimic/OjubaMimic.py:551
+msgid "High"
+msgstr "مرتفعة"
+
+#. # create page and pack widgets ( page 1 )
+#. #########################################
+#: ../OjubaMimic/OjubaMimic.py:556
+msgid "Quality"
+msgstr "الجودة"
+
+#. #########################################
+#. # save options page
+#. dst widgets
+#: ../OjubaMimic/OjubaMimic.py:561
+msgid "same as source"
+msgstr "كالمصدر"
+
+#: ../OjubaMimic/OjubaMimic.py:562
+msgid "fixed"
+msgstr "ثابت"
+
+#: ../OjubaMimic/OjubaMimic.py:563
+msgid "Select destination folder"
+msgstr "إختر دليلاً"
+
+#: ../OjubaMimic/OjubaMimic.py:565
+msgid "Save destination as:"
+msgstr "حفظ إلى :"
+
+#. ifexist widgets
+#: ../OjubaMimic/OjubaMimic.py:567
+msgid "Skip"
+msgstr "تخطي"
+
+#: ../OjubaMimic/OjubaMimic.py:568
+msgid "Overwrite"
+msgstr "استبدال"
+
+#: ../OjubaMimic/OjubaMimic.py:569
+msgid "Rename"
+msgstr "أعد التسمية"
+
+#: ../OjubaMimic/OjubaMimic.py:571
+msgid "If destination exists:"
+msgstr "الملف الهدف موجود :"
+
+#. # create page and pack widgets ( page 2 )
+#. #########################################
+#: ../OjubaMimic/OjubaMimic.py:574
+msgid "Save"
+msgstr "حفظ"
+
+#: ../OjubaMimic/OjubaMimic.py:580
+msgid "Audio Bitrates:"
+msgstr "معدل البتات الصوتي :"
+
+#: ../OjubaMimic/OjubaMimic.py:584
+msgid "Audio Samplerate:"
+msgstr "نسبة عينة الصوت :"
+
+#: ../OjubaMimic/OjubaMimic.py:589
+msgid "Audio Quality:"
+msgstr "جودة الصوت :"
+
+#. # create page and pack widgets ( page 3 )
+#. #########################################
+#: ../OjubaMimic/OjubaMimic.py:592
+msgid "Audio"
+msgstr "الصوت"
+
+#: ../OjubaMimic/OjubaMimic.py:598
+msgid "Video Bitrates:"
+msgstr "معدل البتات للفيديو :"
+
+#: ../OjubaMimic/OjubaMimic.py:604
+msgid "Resize:"
+msgstr "أعد التحجيم :"
+
+#: ../OjubaMimic/OjubaMimic.py:614
+msgid "Video Quality:"
+msgstr "جودة الفيديو :"
+
+#. # create page and pack widgets ( page 4 )
+#. #########################################
+#: ../OjubaMimic/OjubaMimic.py:617
+msgid "Video"
+msgstr "الفيديو"
+
+#: ../OjubaMimic/OjubaMimic.py:623 ../OjubaMimic/OjubaMimic.py:642
+msgid "Top"
+msgstr "أعلى"
+
+#: ../OjubaMimic/OjubaMimic.py:626 ../OjubaMimic/OjubaMimic.py:645
+msgid "Bottom"
+msgstr "أسفل"
+
+#: ../OjubaMimic/OjubaMimic.py:629 ../OjubaMimic/OjubaMimic.py:648
+msgid "Left"
+msgstr "يسار"
+
+#: ../OjubaMimic/OjubaMimic.py:632 ../OjubaMimic/OjubaMimic.py:651
+msgid "Right"
+msgstr "يمين"
+
+#: ../OjubaMimic/OjubaMimic.py:637
+msgid "Crop"
+msgstr "إقتصاص :"
+
+#. Pad widgets
+#: ../OjubaMimic/OjubaMimic.py:640 ../OjubaMimic/OjubaMimic.py:656
+msgid "Pad"
+msgstr "حاشية :"
+
+#. # create page and pack widgets ( page 5 )
+#. #########################################
+#: ../OjubaMimic/OjubaMimic.py:659
+msgid "Advanced"
+msgstr "متقدم"
+
+#: ../OjubaMimic/OjubaMimic.py:840
+msgid "Error: Validity python eval check faild"
+msgstr "خطأ : فشل التحقق من صحة python eval"
+
+#. and audio_bitrate in (4700, 5200, 5950, 6700, 7450, 7950, 9200, 9950)',
+#: ../OjubaMimic/utils.py:77
+msgid "choose a valid size and     bitrate (try cif and 4750)"
 msgstr "إختر حجم ومعدل صحيحين (حاول cif و ٤٧٥٠ )"
 
-#: ../OjubaMimic.py:46
+#: ../OjubaMimic/utils.py:93
 msgid "audio samplerate should be 44100, 22050 or 11025"
 msgstr "عينة الصوت sample rate يجب أن تكون ٤٤١٠٠ أو ٢٢٠٥٠ أو ١١٠٢٥"
 
-#: ../OjubaMimic.py:77 ../OjubaMimic.py:81
+#: ../OjubaMimic/utils.py:256 ../OjubaMimic/utils.py:273
 msgid "Width and Hight must be multibles of 16 or too big resolution"
 msgstr "العرض والارتفاع يجب أن يكونا من مضاعفات ال ١٦ أو أن الدقة عالية جداً!"
 
-#: ../OjubaMimic.py:85
+#: ../OjubaMimic/utils.py:290
 msgid "too big resolution, resize it so that width<=320 and height<=240"
 msgstr ""
 "دقة عالية جداً ، حاول أن تجعل العرض أقل من أو يساوى ٣٢٠ ، والطول أقل من أو "
 "يساوى ٢٤٠"
 
-#: ../OjubaMimic.py:121 ../OjubaMimic.py:606 ../OjubaMimic.py:734
-#: ../OjubaMimic.py:743
-msgid "custom"
-msgstr "مخصص"
-
-#: ../OjubaMimic.py:172
-msgid "MiMiC :: Multi Media Converter"
-msgstr "محول وسائط أعجوبة :: MiMiC"
-
-#: ../OjubaMimic.py:193
-msgid "to: "
-msgstr "إلى :"
-
-#: ../OjubaMimic.py:222
-msgid "Options"
-msgstr "الخيارات"
-
-#: ../OjubaMimic.py:228
-msgid "Add files, Then click Convert!"
-msgstr "أضف الملفات ، ثم إنقر تحويل ..."
-
-#: ../OjubaMimic.py:244
-msgid "Files"
-msgstr "الملفات"
-
-#: ../OjubaMimic.py:249
-msgid "Status"
-msgstr "الحالة"
-
-#: ../OjubaMimic.py:282
-msgid "Open output folder"
-msgstr "فتح المجلد متضمن الناتج"
-
-#: ../OjubaMimic.py:331
-msgid "File/Files removed"
-msgstr "ملف/ملفات أزيلت"
-
-#: ../OjubaMimic.py:357
-msgid "Done"
-msgstr "تم"
-
-#: ../OjubaMimic.py:362
-msgid "Error"
-msgstr "خطأ"
-
-#: ../OjubaMimic.py:367
-msgid "Finished:"
-msgstr "مكتملة:"
-
-#: ../OjubaMimic.py:372
-msgid "Converting:"
-msgstr "يجري التحويل:"
-
-#: ../OjubaMimic.py:375
-msgid "file/files of"
-msgstr "ملف/ملفات من"
-
-#: ../OjubaMimic.py:375
-msgid "Compleated"
-msgstr "مكتمل"
-
-#: ../OjubaMimic.py:409
-msgid "Converting ..."
-msgstr "يجري التحويل..."
-
-#: ../OjubaMimic.py:418 ../OjubaMimic.py:433
-msgid "Not started"
-msgstr "لم يبدأ"
-
-#: ../OjubaMimic.py:441
-msgid "Click Convert, to start converting"
-msgstr "انقر تحويل, لبدء تحويل"
-
-#: ../OjubaMimic.py:441
-msgid "file/files"
-msgstr "ملف/ملفات"
-
-#: ../OjubaMimic.py:492
-msgid "Stoped:"
-msgstr "متوقف:"
-
-#: ../OjubaMimic.py:498
-msgid "Canceled"
-msgstr "ملغى"
-
-#: ../OjubaMimic.py:521 ../OjubaMimic.py:530
-msgid "Exists; Skiped"
-msgstr "موجود: تخطي"
-
-#: ../OjubaMimic.py:536
-msgid "There are corrently running oprations, Stop it?"
-msgstr "هناك عمليات جارية، هل ترغب في توقيفها ؟"
-
-#: ../OjubaMimic.py:542
-msgid "Options..."
-msgstr "الخيارات ..."
-
-#: ../OjubaMimic.py:547
-msgid "Save Options..."
-msgstr "خيارات الحفظ ..."
-
-#: ../OjubaMimic.py:551
-msgid "Save destination: "
-msgstr "حفظ إلى:"
-
-#: ../OjubaMimic.py:552
-msgid "same as source"
-msgstr "كالمصدر"
-
-#: ../OjubaMimic.py:553
-msgid "fixed"
-msgstr "ثابت"
-
-#: ../OjubaMimic.py:554
-msgid "Select destination folder"
-msgstr "إختر دليلاً"
-
-#: ../OjubaMimic.py:557
-msgid "If exists: "
-msgstr "إن وجد:"
-
-#: ../OjubaMimic.py:558
-msgid "Skip"
-msgstr "تخطي"
-
-#: ../OjubaMimic.py:559
-msgid "Overwrite"
-msgstr "استبدال"
-
-#: ../OjubaMimic.py:560
-msgid "Rename"
-msgstr "أعد التسمية"
-
-#. temporal
-#. x_o2.set_sensitive(False)
-#. x_o3.set_sensitive(False)
-#: ../OjubaMimic.py:573
-msgid "Crop"
-msgstr "إقتصاص"
-
-#: ../OjubaMimic.py:576 ../OjubaMimic.py:583
-msgid "Top"
-msgstr "أعلى"
-
-#: ../OjubaMimic.py:577 ../OjubaMimic.py:584
-msgid "Bottom"
-msgstr "أسفل"
-
-#: ../OjubaMimic.py:578 ../OjubaMimic.py:585
-msgid "Left"
-msgstr "يسار"
-
-#: ../OjubaMimic.py:579 ../OjubaMimic.py:586
-msgid "Right"
-msgstr "يمين"
-
-#: ../OjubaMimic.py:581
-msgid "Pad"
-msgstr "حاشية"
-
-#: ../OjubaMimic.py:588
-msgid "Audio Bitrates"
-msgstr "معدل البتات الصوتي"
-
-#: ../OjubaMimic.py:590 ../OjubaMimic.py:593
-msgid "bit/s"
-msgstr "بت/ثانية"
-
-#: ../OjubaMimic.py:591
-msgid "Video Bitrates"
-msgstr "معدل البتات للفيديو"
-
-#: ../OjubaMimic.py:595
-msgid "Audio Quality"
-msgstr "جودة الصوت"
-
-#: ../OjubaMimic.py:598
-msgid "Video Quality"
-msgstr "جودة الفيديو"
-
-#: ../OjubaMimic.py:602
-msgid "Audio Samplerate"
-msgstr "نسبة عينة الصوت sample rate"
-
-#: ../OjubaMimic.py:607
-msgid "Resize"
-msgstr "أعد التحجيم"
-
-#: ../OjubaMimic.py:614
-msgid "Convert Options..."
-msgstr "خيارات التحويل ..."
-
-#: ../OjubaMimic.py:817
-msgid "Select files to convert"
-msgstr "اختر ملفات لتحويلها"
-
-#: ../OjubaMimic.py:819
-msgid "All media files"
-msgstr "جميع ملفات الوسائط"
-
-#: ../OjubaMimic.py:825
-msgid "All video files"
-msgstr "جميع ملفات الفيديو"
-
-#: ../OjubaMimic.py:830
-msgid "All audio files"
-msgstr "جميع الملفات الصوتية"
-
-#: ../OjubaMimic.py:835
-msgid "All files"
-msgstr "جميع الملفات"
-
-#: ../OjubaMimic.py:848 ../OjubaMimic.py:851
-msgid "MiMiC"
-msgstr ""
-
-#. about_dlg.set_version(version)
-#: ../OjubaMimic.py:853
-msgid "Copyright © 2008-2011 Ojuba.org <core@ojuba.org>"
-msgstr ""
-
-#: ../OjubaMimic.py:854
-msgid "Multi Media Converter"
-msgstr "محول وسائط أعجوبة"
-
-#: ../OjubaMimic.py:855
+#: ../OjubaMimic/widgets.py:12
 msgid ""
 "\n"
-"      Released under terms of Waqf Public License.\n"
-"      This program is free software; you can redistribute it and/or modify\n"
-"      it under the terms of the latest version Waqf Public License as\n"
-"      published by Ojuba.org.\n"
+"    Released under terms of Waqf Public License.\n"
+"This program is free software; you can redistribute it and/or modify\n"
+"it under the terms of the latest version Waqf Public License as\n"
+"published by Ojuba.org.\n"
 "\n"
-"      This program is distributed in the hope that it will be useful,\n"
-"      but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
-"      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
+"    This program is distributed in the hope that it will be useful,\n"
+"but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
 "\n"
-"      The Latest version of the license can be found on\n"
-"      \"http://waqf.ojuba.org/license\"\n"
+"    The Latest version of the license can be found on\n"
+"\"http://waqf.ojuba.org/license\"\n"
 "\n"
-"  "
+"    "
 msgstr ""
 "\n"
 "      صدر بموجب شروط رخصة وقف العامة.\n"
@@ -294,9 +300,40 @@ msgstr ""
 "      ولكن بدون ضمانات ، ولا حتى ضمان أداء المهمة المطلوبة منه\n"
 "\n"
 "      يمكن الاطلاع على آخر إصدار من الرخصة على\n"
-"      \"http://waqf.ojuba.org/license\"\n"
+"      http://waqf.ojuba.org/license\n"
 "\n"
 "  "
 
-#~ msgid "Starting operations..."
-#~ msgstr "بدء العمليات"
+#: ../OjubaMimic/widgets.py:220
+msgid "Select files to convert"
+msgstr "اختر ملفات لتحويلها"
+
+#: ../OjubaMimic/widgets.py:227
+msgid "All media files"
+msgstr "جميع ملفات الوسائط"
+
+#: ../OjubaMimic/widgets.py:233
+msgid "All video files"
+msgstr "جميع ملفات الفيديو"
+
+#: ../OjubaMimic/widgets.py:238
+msgid "All audio files"
+msgstr "جميع الملفات الصوتية"
+
+#: ../OjubaMimic/widgets.py:243
+msgid "All files"
+msgstr "جميع الملفات"
+
+#: ../OjubaMimic/widgets.py:254 ../OjubaMimic/widgets.py:257
+msgid "MiMiC"
+msgstr ""
+
+#: ../OjubaMimic/widgets.py:259
+msgid "Copyright © 2008-2012 Ojuba.org <core@ojuba.org>"
+msgstr "جميع الحقوق محفوظة لفريق أعجوبة © 2008-2012 Ojuba.org <core@ojuba.org>"
+
+#: ../OjubaMimic/widgets.py:260
+msgid "Multi Media Converter"
+msgstr "محول وسائط أعجوبة"
+
+

@@ -2,7 +2,7 @@ Name: ojuba-mimic
 Obsoletes: mimic
 Summary: Ojuba Multi Media Converter based on ffmpeg
 URL: http://www.ojuba.org
-Version: 0.2.3
+Version: 1.0.0
 Release: 1%{?dist}
 Source0: http://git.ojuba.org/cgit/%{name}/snapshot/%{name}-%{version}.tar.bz2
 License: Waqf
@@ -53,6 +53,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/locale/*/*/*.mo
 
 %changelog
+* Sun Jun 6 2010  Muayyad Saleh AlSadi <alsadi@ojuba.org> - 1.0.0-1
+- OOP style
+- new structure
+- make it translatable
+- port to gtk3
+
 * Sun Jun 6 2010  Muayyad Saleh AlSadi <alsadi@ojuba.org> - 0.1.6-1
 - update to recent ffmpeg (one with libopencore_amrnb) 
 

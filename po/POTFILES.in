@@ -1,3 +1,5 @@
 ojuba-mimic.desktop.in
-OjubaMimic.py
+OjubaMimic/OjubaMimic.py
+OjubaMimic/utils.py
+OjubaMimic/widgets.py
 
