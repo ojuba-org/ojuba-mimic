@@ -189,7 +189,7 @@ class MainWindow(Gtk.Window):
         i = Gtk.MenuItem(_("Open output folder"))
         i.connect("activate", self.open_odir_cb)
         self.popupMenu.add(i)
-        self.popupMenu.add(Gtk.SeparatorMenuItem())
+        self.popupMenu.add(Gtk.SeparatorMenuItem.new())
         i = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_REMOVE, None)
         i.connect("activate", self.rm_cb)
         self.popupMenu.add(i)
