@@ -1,30 +1,33 @@
-Name: ojuba-mimic
-Obsoletes: mimic
-Summary: Ojuba Multi Media Converter based on ffmpeg
-URL: http://www.ojuba.org
-Version: 0.2.4
-Release: 1%{?dist}
-Source0: http://git.ojuba.org/cgit/%{name}/snapshot/%{name}-%{version}.tar.bz2
-License: Waqf
-Group: Applications/Multimedia
-BuildArch: noarch
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: python, ImageMagick
-Requires: python, ffmpeg
-Requires:   pygobject3 >= 3.0.2
-# %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
+%global owner ojuba-org
+%global commit #Write commit number here
+
+Name:		ojuba-mimic
+Obsoletes:	mimic
+Summary:	Ojuba Multi Media Converter
+URL:		http://ojuba.org
+Version:	0.2.4
+Release:	2%{?dist}
+Source:		https://github.com/%{owner}/%{name}/archive/%{commit}/%{name}-%{commit}.tar.gz
+License:	WAQFv2
+Group:		Applications/Multimedia
+BuildArch:	noarch
+BuildRequires:	python2
+BuildRequires:	python2-devel
+BuildRequires:	ImageMagick
+Requires:	python2
+Requires:	ffmpeg
+Requires:	pygobject3 >= 3.0.2
 
 %description
 Ojuba Multi Media Converter based on ffmpeg
 
 %prep
-%setup -q
+%setup -q -n %{name}-%{commit}
 
 %build
 make %{?_smp_mflags}
 
 %install
-rm -rf $RPM_BUILD_ROOT
 %makeinstall DESTDIR=$RPM_BUILD_ROOT
 
 %post
@@ -39,13 +42,10 @@ if [ -x %{_bindir}/gtk-update-icon-cache ] ; then
 %{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
 fi
 
-%clean
-rm -rf $RPM_BUILD_ROOT
-
 %files
-%doc LICENSE-en LICENSE-ar.txt
+%doc waqf2-ar.pdf
 %{_bindir}/%{name}
-%{python_sitelib}/*
+%{python2_sitelib}/*
 # %{python_sitelib}/*.egg-info
 %{_datadir}/icons/hicolor/*/apps/*.png
 %{_datadir}/icons/hicolor/*/apps/*.svg
@@ -53,6 +53,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/locale/*/*/*.mo
 
 %changelog
+* Sun Feb 16 2014 Mosaab Alzoubi <moceap@hotmail.com> - 0.2.4-2
+- General Revision.
+
 * Sun Jun 2 2012  Muayyad Saleh AlSadi <alsadi@ojuba.org> - 0.2.4-1
 - OOP style
 - new structure
@@ -76,4 +79,3 @@ rm -rf $RPM_BUILD_ROOT
 
 * Sun Aug 03 2008  Muayyad Saleh AlSadi <alsadi@ojuba.org> - 0.1.0-1
 - Initial packing
-
