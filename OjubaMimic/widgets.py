@@ -2,7 +2,7 @@
 # -*- Mode: Python; py-indent-offset: 4 -*-
 """
     Multi Media Converter that utilize gstreamer and/or ffmpeg
-    Copyright © 2008-2012, Ojuba.org <core@ojuba.org>
+    Copyright © 2008-2015, Ojuba.org <core@ojuba.org>
     Released under terms of Waqf Public License
 """
 
@@ -256,7 +256,7 @@ class about_dlg(Gtk.AboutDialog):
         self.set_logo_icon_name('ojuba-mimic')
         self.set_name(_("MiMiC"))
         self.set_wrap_license(True)
-        self.set_copyright(_("Copyright © 2008-2012 Ojuba.org <core@ojuba.org>"))
+        self.set_copyright(_("Copyright © 2008-2015 Ojuba.org <core@ojuba.org>"))
         self.set_comments(_("Multi Media Converter"))
         self.set_license(license)
         self.set_website("http://www.ojuba.org/")

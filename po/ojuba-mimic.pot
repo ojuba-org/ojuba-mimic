@@ -314,7 +314,7 @@ msgid "MiMiC"
 msgstr ""
 
 #: ../OjubaMimic/widgets.py:259
-msgid "Copyright © 2008-2012 Ojuba.org <core@ojuba.org>"
+msgid "Copyright © 2008-2015 Ojuba.org <core@ojuba.org>"
 msgstr ""
 
 #: ../OjubaMimic/widgets.py:260

@@ -329,8 +329,8 @@ msgid "MiMiC"
 msgstr ""
 
 #: ../OjubaMimic/widgets.py:259
-msgid "Copyright © 2008-2012 Ojuba.org <core@ojuba.org>"
-msgstr "جميع الحقوق محفوظة لفريق أعجوبة © 2008-2012 Ojuba.org <core@ojuba.org>"
+msgid "Copyright © 2008-2015 Ojuba.org <core@ojuba.org>"
+msgstr "جميع الحقوق محفوظة لفريق أعجوبة © 2008-2015 Ojuba.org <core@ojuba.org>"
 
 #: ../OjubaMimic/widgets.py:260
 msgid "Multi Media Converter"

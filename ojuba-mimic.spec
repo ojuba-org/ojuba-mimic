@@ -1,25 +1,27 @@
 %global owner ojuba-org
 %global commit #Write commit number here
 
-Name:		ojuba-mimic
-Obsoletes:	mimic
-Summary:	Ojuba Multi Media Converter
-URL:		http://ojuba.org
-Version:	0.2.4
-Release:	2%{?dist}
-Source:		https://github.com/%{owner}/%{name}/archive/%{commit}/%{name}-%{commit}.tar.gz
-License:	WAQFv2
-Group:		Applications/Multimedia
-BuildArch:	noarch
-BuildRequires:	python2
-BuildRequires:	python2-devel
-BuildRequires:	ImageMagick
-Requires:	python2
-Requires:	ffmpeg
-Requires:	pygobject3 >= 3.0.2
+Name: ojuba-mimic
+Summary: MultiMedia Converter
+Summary(ar): محوّل وسائط
+URL: http://ojuba.org
+Version: 0.2.4
+Release: 3%{?dist}
+Source: https://github.com/%{owner}/%{name}/archive/%{commit}/%{name}-%{commit}.tar.gz
+License: WAQFv2
+BuildArch: noarch
+BuildRequires: intltool
+BuildRequires: python2-devel
+BuildRequires: ImageMagick
+Requires: python2
+Requires: ffmpeg
+Requires: pygobject3 >= 3.0.2
 
 %description
 Ojuba Multi Media Converter based on ffmpeg
+
+%description -l ar
+محوّل وسائط أعجوبة متوافق مع محرّك ffmpeg
 
 %prep
 %setup -q -n %{name}-%{commit}
@@ -28,7 +30,7 @@ Ojuba Multi Media Converter based on ffmpeg
 make %{?_smp_mflags}
 
 %install
-%makeinstall DESTDIR=$RPM_BUILD_ROOT
+%make_install
 
 %post
 touch --no-create %{_datadir}/icons/hicolor || :
@@ -43,7 +45,7 @@ if [ -x %{_bindir}/gtk-update-icon-cache ] ; then
 fi
 
 %files
-%doc waqf2-ar.pdf
+%license waqf2-ar.pdf
 %{_bindir}/%{name}
 %{python2_sitelib}/*
 # %{python_sitelib}/*.egg-info
@@ -53,6 +55,15 @@ fi
 %{_datadir}/locale/*/*/*.mo
 
 %changelog
+* Wed Jul 22 2015 Mosaab Alzoubi <moceap@hotmail.com> - 0.2.4-3
+- Remove old obsolete
+- Improve Summary
+- Add Arabic Summary and Description
+- Remove Group tag
+- Update BRs
+- Use %%make_install
+- Use %%license
+
 * Sun Feb 16 2014 Mosaab Alzoubi <moceap@hotmail.com> - 0.2.4-2
 - General Revision.
 
