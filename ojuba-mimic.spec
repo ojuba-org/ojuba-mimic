@@ -1,13 +1,12 @@
 %global owner ojuba-org
-%global commit #Write commit number here
 
 Name: ojuba-mimic
 Summary: MultiMedia Converter
 Summary(ar): محوّل وسائط
 URL: http://ojuba.org
-Version: 0.2.4
-Release: 3%{?dist}
-Source: https://github.com/%{owner}/%{name}/archive/%{commit}/%{name}-%{commit}.tar.gz
+Version: 0.3
+Release: 1%{?dist}
+Source: https://github.com/%{owner}/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
 License: WAQFv2
 BuildArch: noarch
 BuildRequires: intltool
@@ -24,13 +23,56 @@ Ojuba Multi Media Converter based on ffmpeg
 محوّل وسائط أعجوبة متوافق مع محرّك ffmpeg
 
 %prep
-%setup -q -n %{name}-%{commit}
+%autosetup -n %{name}-%{version}
 
 %build
 make %{?_smp_mflags}
 
 %install
 %make_install
+
+
+
+# Register as an application to be visible in the software center
+#
+# NOTE: It would be *awesome* if this file was maintained by the upstream
+# project, translated and installed into the right place during `make install`.
+#
+# See http://www.freedesktop.org/software/appstream/docs/ for more details.
+#
+mkdir -p $RPM_BUILD_ROOT%{_datadir}/appdata
+cat > $RPM_BUILD_ROOT%{_datadir}/appdata/%{name}.appdata.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2017 Mosaab Alzoubi <moceap@hotmail.com> -->
+<!--
+EmailAddress: moceap@hotmail.com
+SentUpstream: 2017-1-8
+-->
+<application>
+  <id type="desktop">ojuba-mimic.desktop</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <summary>Multimedia Convertor</summary>
+  <summary xml:lang="ar">محول وسائط</summary>
+  <description>
+    <p>
+	Ojuba Multi Media Converter based on ffmpeg.
+    </p>
+  </description>
+  <description xml:lang="ar">
+    <p>
+	محوّل وسائط أعجوبة متوافق مع محرّك ffmpeg.
+    </p>
+  </description>
+  <url type="homepage">https://github.com/ojuba-org/%{name}</url>
+  <screenshots>
+    <screenshot type="default">http://ojuba.org/screenshots/%{name}.png</screenshot>
+  </screenshots>
+  <updatecontact>moceap@hotmail.com</updatecontact>
+</application>
+EOF
+
+
+
 
 %post
 touch --no-create %{_datadir}/icons/hicolor || :
@@ -53,8 +95,14 @@ fi
 %{_datadir}/icons/hicolor/*/apps/*.svg
 %{_datadir}/applications/*.desktop
 %{_datadir}/locale/*/*/*.mo
+%{_datadir}/appdata/%{name}.appdata.xml
 
 %changelog
+* Mon Jan 9 2017 Mosaab Alzoubi <moceap@hotmail.com> - 0.3-1
+- Update to 0.3
+- New way to Github
+- Add Appdata
+
 * Wed Jul 22 2015 Mosaab Alzoubi <moceap@hotmail.com> - 0.2.4-3
 - Remove old obsolete
 - Improve Summary
